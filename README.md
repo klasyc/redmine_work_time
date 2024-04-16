@@ -1,3 +1,6 @@
+This is fork of the https://github.com/tkusukawa/redmine_work_time repository which contains a few modifications related to my company.
+It is not intended as a continuation of the original project, but rather as a temporary solution to our needs.
+
 WorkTime is a Redmine plugin to edit spent time by each user.
 
 ### Installation notes ###
