@@ -279,35 +279,35 @@ class WorkTimeController < ApplicationController
     calc_total
     
     csv_data = %Q|"user","project","ticket","spent time"\n|
-    #-------------------------------------- メンバーのループ
+    #-------------------------------------- Loop through members
     @members.each do |mem_info|
       user = mem_info[1]
 
-      #-------------------------------------- プロジェクトのループ
+      #-------------------------------------- Loop through projects
       prjs = WtProjectOrders.where("uid=-1").
           order("dsp_pos").
           all
       prjs.each do |po|
         dsp_prj = po.dsp_prj
         dsp_pos = po.dsp_pos
-        next unless @r_prj_cost.key?(dsp_prj) # 値の無いプロジェクトはパス
-        next unless @r_prj_cost[dsp_prj].key?(-1) # 値の無いプロジェクトはパス
-        next if @r_prj_cost[dsp_prj][-1] == 0 # 値の無いプロジェクトはスパ
-        prj =Project.find_by_id(dsp_prj)
+        next unless @r_prj_cost.key?(dsp_prj) # Skip projects without values
+        next unless @r_prj_cost[dsp_prj].key?(-1) # Skip projects without values
+        next if @r_prj_cost[dsp_prj][-1] == 0 # Skip projects without values
+        prj = Project.find_by_id(dsp_prj)
         
-        #-------------------------------------- チケットのループ
+        #-------------------------------------- Loop through tickets
         tickets = WtTicketRelay.order("position").all
         tickets.each do |tic|
           issue_id = tic.issue_id
-          next unless @r_issue_cost.key?(issue_id) # 値の無いチケットはパス
-          next unless @r_issue_cost[issue_id].key?(-1) # 値の無いチケットはパス
-          next if @r_issue_cost[issue_id][-1] == 0 # 値の無いチケットはパス
-          next unless @r_issue_cost[issue_id].key?(user.id) # 値の無いチケットはパス
-          next if @r_issue_cost[issue_id][user.id] == 0 # 値の無いチケットはパス
+          next unless @r_issue_cost.key?(issue_id) # Skip tickets without values
+          next unless @r_issue_cost[issue_id].key?(-1) # Skip tickets without values
+          next if @r_issue_cost[issue_id][-1] == 0 # Skip tickets without values
+          next unless @r_issue_cost[issue_id].key?(user.id) # Skip tickets without values
+          next if @r_issue_cost[issue_id][user.id] == 0 # Skip tickets without values
 
           issue = Issue.find_by_id(issue_id)
-          next if issue.nil? # チケットが削除されていたらパス
-          next if issue.project_id != dsp_prj # このプロジェクトに表示するチケットでない場合はパス
+          next if issue.nil? # Skip if the ticket has been deleted
+          next if issue.project_id != dsp_prj # Skip if the ticket does not belong to this project
 
           csv_data << %Q|"#{user}","#{prj}","##{issue.id} #{issue.subject}",#{@r_issue_cost[issue_id][user.id]}\n|
         end
@@ -349,7 +349,7 @@ class WorkTimeController < ApplicationController
             end
           end
         end
-      else # 表示権限の無い工数があった場合
+      else # If there are work hours without viewing permission
         user_act_cost.each do |user_id, act_cost|
           user = User.find_by_id(user_id)
           act_cost.each do |act_id, cost|
@@ -428,7 +428,7 @@ class WorkTimeController < ApplicationController
     end
   end
 
-  def ajax_relay_input # チケット選択の内容を返すアクション
+  def ajax_relay_input # Action that returns the content of the ticket selection
     @issue_id = params[:issue_id]
     @projects = Project.joins("INNER JOIN wt_project_orders ON wt_project_orders.dsp_prj=projects.id AND wt_project_orders.uid=-1").
         select("projects.*, wt_project_orders.dsp_pos as pos").
@@ -437,7 +437,7 @@ class WorkTimeController < ApplicationController
     render(:layout=>false)
   end
 
-  def ajax_relay_input_select # チケット選択ウィンドウにAjaxで挿入(Update)される内容を返すアクション
+  def ajax_relay_input_select # Action that returns the content inserted (updated) by Ajax in the ticket selection window
     @issue_id = params[:issue_id]
     @issues = Issue.includes(:assigned_to).
         where(["project_id=:p",{:p=>params[:prj]}]).
@@ -456,7 +456,7 @@ class WorkTimeController < ApplicationController
     render(:layout=>false)
   end
 
-  def ajax_add_tickets_input_select # 複数チケット選択ウィンドウにAjaxで挿入(Update)される内容を返すアクション
+  def ajax_add_tickets_input_select # Action that returns the content inserted (updated) by Ajax in the multiple ticket selection window
     prepare_values
     @issues = Issue.
         includes(:assigned_to).
@@ -467,8 +467,7 @@ class WorkTimeController < ApplicationController
     render(:layout=>false)
   end
 
-  def ajax_add_tickets_insert # 日毎工数に挿入するAjaxアクション
-    prepare_values
+  def ajax_add_tickets_insert # Ajax action to insert into daily work timeprepare_values
 
     uid = params[:user]
     @add_issue_id = params[:add_issue]
@@ -508,7 +507,7 @@ class WorkTimeController < ApplicationController
           @add_issue = add_issue
 
           unless UserIssueMonth.exists?(["uid=:u and issue=:i",{:u=>uid, :i=>@add_issue_id}]) then
-            # 既存のレコードが存在していなければ追加
+            # If there are no existing records, add a new one
             UserIssueMonth.create(:uid=>uid, :issue=>@add_issue_id,
               :odr => UserIssueMonth.where(["uid = ?", uid]).count + 1
             )
@@ -520,11 +519,11 @@ class WorkTimeController < ApplicationController
     render(:layout=>false)
   end
 
-  def ajax_memo_edit # 日毎のメモ入力フォームを出力するAjaxアクション
+  def ajax_memo_edit # Ajax action to output the daily memo input form
     render(:layout=>false)
   end
 
-  def ajax_done_ratio_input # 進捗％更新ポップアップ
+  def ajax_done_ratio_input # Progress % update popup
     prepare_values
     issue_id = params[:issue_id]
     @issue = Issue.find_by_id(issue_id)
@@ -565,14 +564,14 @@ class WorkTimeController < ApplicationController
 
 private
   def find_project
-    # Redmine Pluginとして必要らしいので@projectを設定
+    # Set @project as it seems to be required for Redmine Plugin
     @project = Project.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_404
   end
 
   def prepare_values
-    # ************************************* 値の準備
+    # ************************************* Value preparation
     @crnt_uid = User.current.id
     @this_uid = (params.key?(:user) && User.current.allowed_to?(:view_work_time_other_member, @project)) ? params[:user].to_i : @crnt_uid
     @this_user = User.find_by_id(@this_uid)
@@ -622,45 +621,45 @@ private
   def ticket_pos
     return if @this_uid != @crnt_uid
 
-    # 重複削除と順序の正規化
+    # Remove duplicates and normalize order
     if order_normalization(UserIssueMonth, :issue, :order=>"odr", :conditions=>["uid=:u",{:u=>@this_uid}]) then
       @message ||= ''
       #@message += '<div style="background:#faa;">Warning: normalize UserIssueMonth</div>'
       return
     end
 
-    # 表示チケット順序変更求処理
+    # Process ticket position change request
     if params.key?("ticket_pos") && params[:ticket_pos] =~ /^(.*)_(.*)$/ then
       tid = $1.to_i
       dst = $2.to_i
       src = UserIssueMonth.where(["uid=:u and issue=:i", {:u=>@this_uid,:i=>tid}]).first
-      if src then # ポジション変更の場合
-        if src.odr > dst then # チケットを前にもっていく場合
+      if src then # If changing position
+        if src.odr > dst then # Move ticket forward
           tgts = UserIssueMonth.
               where(["uid=:u and odr>=:o1 and odr<:o2", {:u=>src.uid, :o1=>dst, :o2=>src.odr}]).
               all
           tgts.each do |tgt|
-            tgt.odr += 1; tgt.save# 順位をひとつずつ後へ
+            tgt.odr += 1; tgt.save# Move each position one step back
           end
           src.odr = dst; src.save
-        else # チケットを後に持っていく場合
+        else # Move ticket backward
           tgts = UserIssueMonth.
               where(["uid=:u and odr<=:o1 and odr>:o2",{:u=>src.uid, :o1=>dst, :o2=>src.odr}]).
               all
           tgts.each do |tgt|
-            tgt.odr -= 1; tgt.save# 順位をひとつずつ後へ
+            tgt.odr -= 1; tgt.save# Move each position one step forward
           end
           src.odr = dst; src.save
         end
       else
-        # 新規のポジションの場合
+        # If it's a new position
         tgts = UserIssueMonth.
             where(["uid=:u and odr>=:o1", {:u=>@this_uid, :o1=>dst}]).
             all
         tgts.each do |tgt|
-          tgt.odr += 1; tgt.save# 順位をひとつずつ後へ
+          tgt.odr += 1; tgt.save# Move each position one step back
         end
-        UserIssueMonth.create(:uid=>@this_uid, :issue=>tid, :odr=>dst) # 追加
+        UserIssueMonth.create(:uid=>@this_uid, :issue=>tid, :odr=>dst) # Add new position
       end
     end
   end
@@ -668,14 +667,14 @@ private
   def prj_pos
     return if @this_uid != @crnt_uid
 
-    # 重複削除と順序の正規化
+    # Remove duplicates and normalize order
     if order_normalization(WtProjectOrders, :dsp_prj, :order=>"dsp_pos", :conditions=>["uid=:u",{:u=>@this_uid}]) then
       @message ||= ''
       #@message += '<div style="background:#faa;">Warning: normalize WtProjectOrders</div>'
       return
     end
 
-    # 表示プロジェクト順序変更求処理
+    # Process project position change request
     if params.key?("prj_pos") && params[:prj_pos] =~ /^(.*)_(.*)$/ then
       tid = $1.to_i
       dst = $2.to_i
@@ -683,40 +682,40 @@ private
           where(["uid=:u and dsp_prj=:d",{:u=>@this_uid, :d=>tid}]).
           first
 
-      if src then # ポジション変更の場合
-        if src.dsp_pos > dst then # チケットを前にもっていく場合
+      if src then # If position change
+        if src.dsp_pos > dst then # If moving the project forward
           tgts = WtProjectOrders.
               where(["uid=:u and dsp_pos>=:o1 and dsp_pos<:o2",{:u=>@this_uid, :o1=>dst, :o2=>src.dsp_pos}]).
               all
           tgts.each do |tgt|
-            tgt.dsp_pos += 1; tgt.save# 順位をひとつずつ後へ
+            tgt.dsp_pos += 1; tgt.save# Move each position one step back
           end
           src.dsp_pos = dst; src.save
-        else # チケットを後に持っていく場合
+        else # If moving the project backward
           tgts = WtProjectOrders.
               where(["uid=:u and dsp_pos<=:o1 and dsp_pos>:o2",{:u=>@this_uid, :o1=>dst, :o2=>src.dsp_pos}]).
               all
           tgts.each do |tgt|
-            tgt.dsp_pos -= 1; tgt.save# 順位をひとつずつ後へ
+            tgt.dsp_pos -= 1; tgt.save# Move each position one step forward
           end
           src.dsp_pos = dst; src.save
         end
       else
-        # 新規のポジションの場合
+        # If it's a new position
           tgts = WtProjectOrders.
               where(["uid=:u and dsp_pos>=:o1",{:u=>@this_uid, :o1=>dst}]).
               all
           tgts.each do |tgt|
-            tgt.dsp_pos += 1; tgt.save# 順位をひとつずつ後へ
+            tgt.dsp_pos += 1; tgt.save# Move each position one step back
           end
           WtProjectOrders.create(:uid=>@this_uid, :dsp_prj=>tid, :dsp_pos=>dst)
       end
     end
   end
 
-  def ticket_del # チケット削除処理
+  def ticket_del # Ticket deletion process
     if params.key?("ticket_del") then
-      if params["ticket_del"]=="closed" then # 終了チケット全削除の場合
+      if params["ticket_del"]=="closed" then # If deleting all closed tickets
           issues = Issue.
               joins("INNER JOIN user_issue_months ON user_issue_months.issue=issues.id").
               where(["user_issue_months.uid=:u",{:u=>@this_uid}]).
@@ -731,7 +730,7 @@ private
           return
       end
 
-      # チケット番号指定の削除の場合
+      # If deleting a specific ticket
       src = UserIssueMonth.
           where(["uid=:u and issue=:i",{:u=>@this_uid,:i=>params["ticket_del"]}]).
           first
@@ -740,14 +739,14 @@ private
               where(["uid=:u and odr>:o",{:u=>src.uid, :o=>src.odr}]).
               all
           tgts.each do |tgt|
-            tgt.odr -= 1; tgt.save# 当該チケット表示より後ろの全チケットの順位をアップ
+            tgt.odr -= 1; tgt.save# Move all tickets after the specified ticket one step up
           end
-          src.destroy# 当該チケット表示を削除
+          src.destroy# Delete the specified ticket
       end
     end
   end
 
-  def hour_update # *********************************** 工数更新要求の処理
+  def hour_update # Time entry update request processing
     by_other = false
     if @this_uid != @crnt_uid
       if User.current.allowed_to?(:edit_work_time_other_member, @project)
@@ -757,7 +756,7 @@ private
       end
     end
 
-    # 新規工数の登録
+    # Register new time entries
     if params["new_time_entry"] then
       params["new_time_entry"].each do |issue_id, valss|
         issue = Issue.find_by_id(issue_id)
@@ -793,7 +792,7 @@ private
       end
     end
 
-    # 既存工数の更新
+    # Update existing time entries
     if params["time_entry"] then
       params["time_entry"].each do |id, vals|
         tm = TimeEntry.find_by_id(id)
@@ -805,7 +804,7 @@ private
           end
         end
         if tm_vals["hours"].blank? then
-          # 工数指定が空文字の場合は工数項目を削除
+          # Delete time entry if hours field is empty
           if by_other
             append_text = "\n[#{Time.now.localtime.strftime("%Y-%m-%d %H:%M")}] #{User.current.to_s}"
             append_text += " delete time entry of ##{issue_id.to_s}: -#{tm.hours.to_f}h-"
@@ -863,7 +862,7 @@ private
   end
 
   def member_add_del_check
-    # プロジェクトのメンバーを取得
+    # Get project members
     mem = Member.where(["project_id=:prj", {:prj=>@project.id}]).all
     mem_by_uid = {}
     mem.each do |m|
@@ -871,10 +870,10 @@ private
       mem_by_uid[m.user_id] = m
     end
 
-    # メンバーの順序を取得
+    # Get member positions
     odr = WtMemberOrder.where(["prj_id=:p", {:p=>@project.id}]).order("position").all
 
-    # 当月のユーザ毎の工数入力数を取得
+    # Get number of time entries per user for the current month
     entry_count = TimeEntry.
         where(["spent_on>=:first_date and spent_on<=:last_date",
                {:first_date=>@first_date, :last_date=>@last_date}]).
@@ -888,22 +887,22 @@ private
 
     @members = []
     pos = 1
-    # 順序情報にあってメンバーに無いものをチェック
+    # Check members that exist in the position information but not in the members list
     odr.each do |o|
       if mem_by_uid.has_key?(o.user_id) then
         user=mem_by_uid[o.user_id].user
         if ! user.nil? then
-          # 順位の確認と修正
+          # Check and fix position
           if o.position != pos then
             o.position=pos
             o.save
           end
-          # 表示メンバーに追加
+          # Add member to the display list
           if user.active? || cnt_by_uid.has_key?(user.id) then
             @members.push([pos, user])
           end
           pos += 1
-          # 順序情報に存在したメンバーを削っていく
+          # Remove member from the position information
           mem_by_uid.delete(o.user_id)
           next
         end
@@ -928,24 +927,24 @@ private
     
   end
 
-  def update_daily_memo(text, append = false) # 日ごとメモの更新
+  def update_daily_memo(text, append = false) # Update daily memo
     year = params[:year] || return
     month = params[:month] || return
     day = params[:day] || return
     user_id = params[:user] || return
 
-    # ユーザと日付で既存のメモを検索
+    # Find existing memo for the user and date
     date = Date.new(year.to_i,month.to_i,day.to_i)
     memo = WtDailyMemo.where(["day=:d and user_id=:u",{:d=>date,:u=>user_id}]).first
 
     if memo then
-      # 既存のメモがあれば
+      # If memo exists
       text = memo.description + text if append
       memo.description = text
       memo.updated_on = Time.now
-      memo.save # 更新
+      memo.save # Update memo
     else
-      # 既存のメモがなければ新規作成
+      # If memo doesn't exist, create a new one
       now = Time.now
       WtDailyMemo.create(:user_id=>user_id,
                          :day=>date,
@@ -955,7 +954,7 @@ private
     end
   end
 
-  ################################ 休日設定
+  ################################ Set Holiday
   def set_holiday
     user_id = params["user"] || return
     if set_date = params['set_holiday'] then
@@ -972,28 +971,28 @@ private
   end
 
   def change_member_position
-    ################################### メンバー順序変更処理
+    ################################### Change member position
     if params.key?("member_pos") && params[:member_pos]=~/^(.*)_(.*)$/ then
       if User.current.allowed_to?(:edit_work_time_total, @project) then
         uid = $1.to_i
         dst = $2.to_i
         mem = WtMemberOrder.where(["prj_id=:p and user_id=:u",{:p=>@project.id, :u=>uid}]).first
         if mem then
-          if mem.position > dst then # メンバーを前に持っていく場合
+          if mem.position > dst then # Move member forward
             tgts = WtMemberOrder.
                 where(["prj_id=:p and position>=:p1 and position<:p2",{:p=>@project.id, :p1=>dst, :p2=>mem.position}]).
                 all
             tgts.each do |mv|
-              mv.position+=1; mv.save # 順位を一つずつ後へ
+              mv.position+=1; mv.save # Move position one by one forward
             end
             mem.position=dst; mem.save
           end
-          if mem.position < dst then # メンバーを後に持っていく場合
+          if mem.position < dst then # Move member backward
             tgts = WtMemberOrder.
                 where(["prj_id=:p and position<=:p1 and position>:p2",{:p=>@project.id, :p1=>dst, :p2=>mem.position}]).
                 all
             tgts.each do |mv|
-              mv.position-=1; mv.save # 順位を一つずつ前へ
+              mv.position-=1; mv.save # Move position one by one backward
             end
             mem.position=dst; mem.save
           end
@@ -1007,35 +1006,35 @@ private
   end
 
   def change_ticket_position
-    # 重複削除と順序の正規化
+    # Remove duplicates and normalize order
     if order_normalization(WtTicketRelay, :issue_id, :order=>"position") then
       @message ||= ''
       #@message += '<div style="background:#faa;">Warning: normalize WtTicketRelay</div>'
       return
     end
 
-    ################################### チケット表示順序変更処理
+    ################################### Change ticket position
     if params.key?("ticket_pos") && params[:ticket_pos]=~/^(.*)_(.*)$/ then
       if User.current.allowed_to?(:edit_work_time_total, @project) then
         issue_id = $1.to_i
         dst = $2.to_i
         relay = WtTicketRelay.where(["issue_id=:i",{:i=>issue_id}]).first
         if relay then
-          if relay.position > dst then # 前に持っていく場合
+          if relay.position > dst then # Move forward
             tgts = WtTicketRelay.
                 where(["position>=:p1 and position<:p2",{:p1=>dst, :p2=>relay.position}]).
                 all
             tgts.each do |mv|
-              mv.position+=1; mv.save # 順位を一つずつ後へ
+              mv.position+=1; mv.save # Move position one by one forward
             end
             relay.position=dst; relay.save
           end
-          if relay.position < dst then # 後に持っていく場合
+          if relay.position < dst then # Move backward
             tgts = WtTicketRelay.
                 where(["position<=:p1 and position>:p2",{:p1=>dst, :p2=>relay.position}]).
                 all
             tgts.each do |mv|
-              mv.position-=1; mv.save # 順位を一つずつ前へ
+              mv.position-=1; mv.save # Move position one by one backward
             end
             relay.position=dst; relay.save
           end
@@ -1050,48 +1049,48 @@ private
 
 
   def change_project_position
-    # 重複削除と順序の正規化
+    # Remove duplicates and normalize order
     if order_normalization(WtProjectOrders, :dsp_prj, :order=>"dsp_pos", :conditions=>"uid=-1") then
       @message ||= ''
       #@message += '<div style="background:#faa;">Warning: normalize WtProjectOrders</div>'
       return
     end
 
-    ################################### プロジェクト表示順序変更処理
-    return if !params.key?("prj_pos") # 位置変更パラメータが無ければパス
-    return if !(params[:prj_pos]=~/^(.*)_(.*)$/) # パラメータの形式が正しくなければパス
+    ################################### Change project position
+    return if !params.key?("prj_pos") # If no position change parameter, skip
+    return if !(params[:prj_pos]=~/^(.*)_(.*)$/) # If parameter format is incorrect, skip
     dsp_prj = $1.to_i
     dst = $2.to_i
 
     if !User.current.allowed_to?(:edit_work_time_total, @project) then
-       # 権限が無ければパス
+       # If no permission, skip
       @message ||= ''
       @message += '<div style="background:#faa;">'+l(:wt_no_permission)+'</div>'
       return
     end
 
     po = WtProjectOrders.where(["uid=-1 and dsp_prj=:d",{:d=>dsp_prj}]).first
-    return if po == nil # 対象の表示プロジェクトが無ければパス
+    return if po == nil # If the target display project doesn't exist, skip
 
-    if po.dsp_pos > dst then # 前に持っていく場合
+    if po.dsp_pos > dst then # Move forward
       tgts = WtProjectOrders.where(["uid=-1 and dsp_pos>=:o1 and dsp_pos<:o2",{:o1=>dst, :o2=>po.dsp_pos}]).all
       tgts.each do |mv|
-        mv.dsp_pos+=1; mv.save # 順位を一つずつ後へ
+        mv.dsp_pos+=1; mv.save # Move position one by one forward
       end
       po.dsp_pos=dst; po.save
     end
 
-    if po.dsp_pos < dst then # 後に持っていく場合
+    if po.dsp_pos < dst then # Move backward
       tgts = WtProjectOrders.where(["uid=-1 and dsp_pos<=:o1 and dsp_pos>:o2",{:o1=>dst, :o2=>po.dsp_pos}]).all
       tgts.each do |mv|
-        mv.dsp_pos-=1; mv.save # 順位を一つずつ前へ
+        mv.dsp_pos-=1; mv.save # Move position one by one backward
       end
       po.dsp_pos=dst; po.save
     end
   end
 
   def calc_total
-    ################################################  合計集計計算ループ ########
+    ################################################  Total calculation loop ########
     @total_cost = 0
     @member_cost = Hash.new
     WtMemberOrder.where(["prj_id=:p",{:p=>@project.id}]).all.each do |i|
@@ -1113,7 +1112,7 @@ private
       relay[i.issue_id] = i.parent
     end
 
-    #当月の時間記録を抽出
+    # Extract time entries for the current month
     TimeEntry.
         where(["spent_on>=:t1 and spent_on<=:t2 and hours>0",{:t1 => @first_date, :t2 => @last_date}]).
         all.
@@ -1122,13 +1121,13 @@ private
       uid = time_entry.user_id
       cost = time_entry.hours
       act = time_entry.activity_id
-      # 本プロジェクトのユーザの工数でなければパス
+      # Skip if it's not a time entry for a user in this project
       next unless @member_cost.key?(uid)
 
       issue = Issue.find_by_id(iid)
-      next if issue.nil? # チケットが削除されていたらパス
+      next if issue.nil? # Skip if the issue has been deleted
       pid = issue.project_id
-      # プロジェクト限定の対象でなければパス
+      # Skip if it's not a project-specific entry
       next if @restrict_project && pid != @restrict_project
 
       @total_cost += cost
@@ -1136,7 +1135,7 @@ private
 
       parent_iid = get_parent_issue(relay, iid)
       if !Issue.find_by_id(iid) || !Issue.find_by_id(iid).visible?
-        # 表示権限の無い工数があった場合
+        # If the time entry is not visible, set the ids to -1
         iid = -1 # private
         pid = -1 # private
         act = -1 # private
@@ -1189,7 +1188,7 @@ private
     @issue_parent ||= Hash.new
     return @issue_parent[iid] if @issue_parent.has_key?(iid)
     issue = Issue.find_by_id(iid)
-    return 0 if issue.nil? # issueが削除されていたらそこまで
+    return 0 if issue.nil? # Return 0 if the issue has been deleted
     @issue_cost[iid] ||= Hash.new
 
     if relay.has_key?(iid)
@@ -1199,12 +1198,12 @@ private
       end
       parent_id = iid if parent_id == 0
     else
-      # 関連が登録されていない場合は登録する
+      # If there is no relation, create one
       WtTicketRelay.create(:issue_id=>iid, :position=>relay.size, :parent=>0)
       parent_id = iid
     end
 
-    # iid に対する初めての処理
+    # First processing for iid
     pid = issue.project_id
     unless @prj_cost.has_key?(pid)
       check = WtProjectOrders.where(["uid=-1 and dsp_prj=:p",{:p=>pid}]).all
@@ -1213,25 +1212,25 @@ private
       end
     end
 
-    @issue_parent[iid] = parent_id # return
+    @issue_parent[iid] = parent_id # Return
   end
 
   def make_pack
-    # 月間工数表のデータを作成
+    # Create data for monthly work time table
     @month_pack = {:ref_prjs=>{}, :odr_prjs=>[],
                    :total=>0, :total_by_day=>{},
                    :other=>0, :other_by_day=>{},
                    :count_prjs=>0, :count_issues=>0}
     @month_pack[:total_by_day].default = 0
 
-    # 日毎工数のデータを作成
+    # Create data for daily work time table
     @day_pack = {:ref_prjs=>{}, :odr_prjs=>[],
                  :total=>0, :total_by_day=>{},
                  :other=>0, :other_by_day=>{},
                  :count_prjs=>0, :count_issues=>0}
     @day_pack[:total_by_day].default = 0
 
-    # プロジェクト順の表示データを作成
+    # Create display data in project order
     dsp_prjs = Project.joins("INNER JOIN wt_project_orders ON wt_project_orders.dsp_prj=projects.id").
         where(["wt_project_orders.uid=:u",{:u=>@this_uid}]).
         select("projects.*, wt_project_orders.dsp_pos as dsp_pos").
@@ -1244,7 +1243,7 @@ private
     end
     @prj_odr_max = dsp_prjs.length
 
-    # チケット順の表示データを作成
+    # Create display data in ticket order
     dsp_issues = Issue.joins("INNER JOIN user_issue_months ON user_issue_months.issue=issues.id").
         where(["user_issue_months.uid=:u",{:u=>@this_uid}]).
         order("user_issue_months.odr").
@@ -1259,7 +1258,7 @@ private
     end
     @issue_odr_max = dsp_issues.length
 
-    # 月内の工数を集計
+    # Aggregate work time for the month
     hours = TimeEntry.
         includes(:issue).
         where(["user_id=:uid and spent_on>=:day1 and spent_on<=:day2",
@@ -1269,57 +1268,57 @@ private
       next if @restrict_project && @restrict_project!=hour.project.id
       work_time = hour.hours
       if hour.issue && hour.issue.visible? then
-        # 表示項目に工数のプロジェクトがあるかチェック→なければ項目追加
+        # Check if the project is in the display items, if not, add it
         prj_pack = make_pack_prj(@month_pack, hour.project)
 
-        # 表示項目に工数のチケットがあるかチェック→なければ項目追加
+        # Check if the issue is in the display items, if not, add it
         issue_pack = make_pack_issue(prj_pack, hour.issue)
 
         issue_pack[:count_hours] += 1
 
-        # 合計時間の計算
+        # Calculate total time
         @month_pack[:total] += work_time
         prj_pack[:total] += work_time
         issue_pack[:total] += work_time
 
-        # 日毎の合計時間の計算
+        # Calculate total time by day
         date = hour.spent_on
         @month_pack[:total_by_day][date] += work_time
         prj_pack[:total_by_day][date] += work_time
         issue_pack[:total_by_day][date] += work_time
 
-        if date==@this_date then # 表示日の工数であれば項目追加
-          # 表示項目に工数のプロジェクトがあるかチェック→なければ項目追加
+        if date==@this_date then # If it's the displayed date, add it to the daily pack
+          # Check if the project is in the display items, if not, add it
           day_prj_pack = make_pack_prj(@day_pack, hour.project)
 
-          # 表示項目に工数のチケットがあるかチェック→なければ項目追加
+          # Check if the issue is in the display items, if not, add it
           day_issue_pack = make_pack_issue(day_prj_pack, hour.issue, NO_ORDER)
 
-          day_issue_pack[:each_entries][hour.id] = hour # 工数エントリを追加
+          day_issue_pack[:each_entries][hour.id] = hour # Add time entry
           day_issue_pack[:total] += work_time
           day_prj_pack[:total] += work_time
           @day_pack[:total] += work_time
         end
       else
-        # 合計時間の計算
+        # Calculate total time
         @month_pack[:total] += work_time
         @month_pack[:other] += work_time
 
-        # 日毎の合計時間の計算
+        # Calculate total time by day
         date = hour.spent_on
         @month_pack[:total_by_day][date] ||= 0
         @month_pack[:total_by_day][date] += work_time
         @month_pack[:other_by_day][date] ||= 0
         @month_pack[:other_by_day][date] += work_time
 
-        if date==@this_date then # 表示日の工数であれば項目追加
+        if date==@this_date then # If it's the displayed date, add it to the daily pack
           @day_pack[:total] += work_time
           @day_pack[:other] += work_time
         end
       end
     end
 
-    # この日のチケット作成を洗い出す
+    # List newly created tickets for this day
     next_date = @this_date+1
     t1 = Time.local(@this_date.year, @this_date.month, @this_date.day)
     t2 = Time.local(next_date.year, next_date.month, next_date.day)
@@ -1366,7 +1365,7 @@ private
       end
     end
 
-    # 月間工数表から工数が無かった項目の削除と項目数のカウント
+    # Remove items with no work time from the monthly work time table and count the number of items
     @month_pack[:count_issues] = 0
     @month_pack[:odr_prjs].each do |prj_pack|
       prj_pack[:odr_issues].each do |issue_pack|
@@ -1384,7 +1383,7 @@ private
   end
 
   def make_pack_prj(pack, new_prj, odr=NO_ORDER)
-      # 表示項目に当該プロジェクトがあるかチェック→なければ項目追加
+      # Check if the project is in the display items, if not, add it
       unless pack[:ref_prjs].has_key?(new_prj.id) then
         prj_pack = {:odr=>odr, :prj=>new_prj,
                     :total=>0, :total_by_day=>{},
@@ -1399,7 +1398,7 @@ private
 
   def make_pack_issue(prj_pack, new_issue, odr=NO_ORDER)
       id = new_issue.nil? ? -1 : new_issue.id
-      # 表示項目に当該チケットがあるかチェック→なければ項目追加
+      # Check if the issue is in the display items, if not, add it
       unless prj_pack[:ref_issues].has_key?(id) then
         issue_pack = {:odr=>odr, :issue=>new_issue,
                       :total=>0, :total_by_day=>{},
@@ -1432,7 +1431,7 @@ private
     end
   end
 
-  # 重複削除と順序の正規化
+  # Remove duplicates and normalize order
   def order_normalization(table, key_column, find_params)
     raise "need table" unless table
     order = find_params[:order]
