@@ -60,20 +60,6 @@ prj_pack[:odr_issues].each do |issue_pack|
                 {:controller=>"issues", :action=>"show", :id=>issue_id},
                 :popup=>true, :class=>'wt_iss_link', :'data-issue'=>issue_id) %>
     <%= print_issue_cost(issue) %>
-    <%if User.current.allowed_to?(:edit_issues, issue.project)%>
-        <a name="<%='done_ratio'+issue.id.to_s%>"
-           class="wt_done_ratio"
-           data-issue="<%= issue_id %>"
-           href="#"
-           onclick="input_done_ratio(
-                   '<%=url_for(@link_params.merge(:action=>"ajax_done_ratio_input"))%>',
-                   <%=issue_id%>);
-                   return false;">
-          [<%=issue.done_ratio%>&#37;]
-        </a>
-    <%else%>
-        [<%=issue.done_ratio%>&#37;]
-    <%end%>
     <%if @this_uid==@crnt_uid then%>
     &nbsp;&nbsp;&nbsp;
     <a style="position:absolute;bottom:1px;right:10px;"
@@ -131,20 +117,6 @@ prj_pack[:odr_issues].each do |issue_pack|
                 :popup=>true, :class=>'wt_iss_link', :'data-issue'=>issue_id) %>
 
     <%= print_issue_cost(issue) %>
-    <%if User.current.allowed_to?(:edit_issues, issue.project)%>
-            <a name="<%='done_ratio'+issue_id.to_s%>"
-               class="wt_done_ratio"
-               data-issue="<%= issue_id %>"
-               href="#"
-               onclick="input_done_ratio(
-                       '<%=url_for(@link_params.merge(:action=>"ajax_done_ratio_input"))%>',
-                       <%=issue_id%>);
-                       return false;">
-              [<%=issue.done_ratio%>&#37;]
-            </a>
-    <%else%>
-            [<%=issue.done_ratio%>&#37;]
-    <%end%>
     <%if @this_uid==@crnt_uid then%>
     &nbsp;&nbsp;&nbsp;
 
