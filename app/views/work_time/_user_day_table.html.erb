@@ -6,7 +6,6 @@
     <td><%=l(:field_remaining_hours)%></td>
     <% end %>
     <td><%=l(:field_activity)%></td>
-    <td><%=l(:field_status)%></td>
     <td><%=l(:field_comments)%></td>
     <% @custom_fields.each do |cf| %>
        <td><%= cf.name %></td>
@@ -47,7 +46,6 @@
   <% if @is_registerd_backlog then %>
   <td>&nbsp;</td>
   <% end %>
-  <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <% @custom_fields.each do |cf| %>
@@ -130,18 +128,6 @@ prj_pack[:odr_issues].each do |issue_pack|
   <% end %>
   <td>
     <%= select_tag "new_time_entry["+issue_id.to_s+"][0][activity_id]", options_for_select(activities,activity_default) %>
-  </td>
-  <td>
-    <% if issue.new_statuses_allowed_to(User.current).length == 0 then %>
-      <%= issue.status %>
-    <% else %>
-      <% select_name="new_time_entry["+issue_id.to_s+"][0][status_id]" %>
-      <%= select_tag select_name,
-                     options_for_select(issue.new_statuses_allowed_to(User.current).collect {|p| [p.name, p.id]},
-                                        issue.status_id),
-                     :onchange => "statusUpdateOnDailyTable('#{select_name}')",
-                     :required => true %>
-    <% end %>
   </td>
   <td>
     <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][comments]", "", :size=>80)%>
@@ -227,18 +213,6 @@ prj_pack[:odr_issues].each do |issue_pack|
     <%= select_tag "time_entry["+hour_id.to_s+"][activity_id]", options_for_select(activities, hour.activity_id), :required => true %>
   </td>
   <td>
-    <% if issue.new_statuses_allowed_to(User.current).length == 0 then %>
-      <%= issue.status %>
-    <% else %>
-      <% select_name="time_entry["+hour_id.to_s+"][status_id]" %>
-      <%= select_tag select_name,
-                     options_for_select(issue.new_statuses_allowed_to(User.current).collect {|p| [p.name, p.id]},
-                                        issue.status_id),
-                     :onchange => "statusUpdateOnDailyTable('#{select_name}')",
-                     :required => true %>
-    <% end %>
-  </td>
-  <td>
     <%= text_field_tag("time_entry["+hour_id.to_s+"][comments]", hour.comments, :size=>80)%>
   </td>
   <% hour.custom_field_values.each do |cfv| %>
@@ -258,7 +232,6 @@ end
   <% if @is_registerd_backlog then %>
       <td><%=sprintf("%1.2f", @day_pack[:other_remain]) if @day_pack[:other_remain]%></td>
   <% end %>
-  <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <% @custom_fields.each do |cf| %>
