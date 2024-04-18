@@ -224,31 +224,6 @@ class WorkTimeController < ApplicationController
     render(:layout=>false)
   end
 
-  def ajax_done_ratio_input # Progress % update popup
-    prepare_values
-    issue_id = params[:issue_id]
-    @issue = Issue.find_by_id(issue_id)
-    if @issue.nil? || @issue.closed? || !@issue.visible? then
-      @issueHtml = "<del>"+@issue.to_s+"</del>"
-    else
-      @issueHtml = @issue.to_s
-    end
-    render(:layout=>false)
-  end
-
-  def ajax_done_ratio_update
-    prepare_values
-    issue_id = params[:issue_id]
-    done_ratio = params[:done_ratio]
-    @issue = Issue.find_by_id(issue_id)
-    if User.current.allowed_to?(:edit_issues, @issue.project) then
-      @issue.init_journal(User.current)
-      @issue.done_ratio = done_ratio
-      @issue.save
-    end
-    render(:layout=>false)
-  end
-
   def register_project_settings
     @message = ""
     require_login || return
