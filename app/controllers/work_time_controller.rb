@@ -38,7 +38,6 @@ class WorkTimeController < ApplicationController
     end
     hour_update
     make_pack
-    member_add_del_check
     set_holiday
     @custom_fields = TimeEntryCustomField.all
     @link_params.merge!(:action=>"show")
@@ -276,72 +275,6 @@ private
     str.html_safe
   end
 
-  def member_add_del_check
-    # Get project members
-    mem = Member.where(["project_id=:prj", {:prj=>@project.id}]).all
-    mem_by_uid = {}
-    mem.each do |m|
-      next if m.nil? || m.user.nil? || ! m.user.allowed_to?(:view_work_time_tab, @project)
-      mem_by_uid[m.user_id] = m
-    end
-
-    # Get member positions
-    odr = WtMemberOrder.where(["prj_id=:p", {:p=>@project.id}]).order("position").all
-
-    # Get number of time entries per user for the current month
-    entry_count = TimeEntry.
-        where(["spent_on>=:first_date and spent_on<=:last_date",
-               {:first_date=>@first_date, :last_date=>@last_date}]).
-        select("user_id, count(hours)as cnt").
-        group("user_id").
-        all
-    cnt_by_uid = {}
-    entry_count.each do |ec|
-      cnt_by_uid[ec.user_id] = ec.cnt
-    end
-
-    @members = []
-    pos = 1
-    # Check members that exist in the position information but not in the members list
-    odr.each do |o|
-      if mem_by_uid.has_key?(o.user_id) then
-        user=mem_by_uid[o.user_id].user
-        if ! user.nil? then
-          # Check and fix position
-          if o.position != pos then
-            o.position=pos
-            o.save
-          end
-          # Add member to the display list
-          if user.active? || cnt_by_uid.has_key?(user.id) then
-            @members.push([pos, user])
-          end
-          pos += 1
-          # Remove member from the position information
-          mem_by_uid.delete(o.user_id)
-          next
-        end
-      end
-      # メンバーに無い順序情報は削除する
-      o.destroy
-    end
-
-    # 残ったメンバーを順序情報に加える
-    mem_by_uid.each do |k,v|
-      user = v.user
-      next if user.nil?
-      n = WtMemberOrder.new(:user_id=>user.id,
-                              :position=>pos,
-                              :prj_id=>@project.id)
-      n.save
-      if user.active? || cnt_by_uid.has_key?(user.id) then
-        @members.push([pos, user])
-      end
-      pos += 1
-    end
-
-  end
-
   ################################ Set Holiday
   def set_holiday
     user_id = params["user"] || return
@@ -358,48 +291,10 @@ private
     end
   end
 
-  def change_member_position
-    ################################### Change member position
-    if params.key?("member_pos") && params[:member_pos]=~/^(.*)_(.*)$/ then
-      if User.current.allowed_to?(:edit_work_time_total, @project) then
-        uid = $1.to_i
-        dst = $2.to_i
-        mem = WtMemberOrder.where(["prj_id=:p and user_id=:u",{:p=>@project.id, :u=>uid}]).first
-        if mem then
-          if mem.position > dst then # Move member forward
-            tgts = WtMemberOrder.
-                where(["prj_id=:p and position>=:p1 and position<:p2",{:p=>@project.id, :p1=>dst, :p2=>mem.position}]).
-                all
-            tgts.each do |mv|
-              mv.position+=1; mv.save # Move position one by one forward
-            end
-            mem.position=dst; mem.save
-          end
-          if mem.position < dst then # Move member backward
-            tgts = WtMemberOrder.
-                where(["prj_id=:p and position<=:p1 and position>:p2",{:p=>@project.id, :p1=>dst, :p2=>mem.position}]).
-                all
-            tgts.each do |mv|
-              mv.position-=1; mv.save # Move position one by one backward
-            end
-            mem.position=dst; mem.save
-          end
-        end
-      else
-        @message ||= ''
-        @message += '<div style="background:#faa;">'+l(:wt_no_permission)+'</div>'
-        return
-      end
-    end
-  end
-
   def calc_total
     ################################################  Total calculation loop ########
     @total_cost = 0
     @member_cost = Hash.new
-    WtMemberOrder.where(["prj_id=:p",{:p=>@project.id}]).all.each do |i|
-      @member_cost[i.user_id] = 0
-    end
     @issue_parent = Hash.new # clear cash
 
     @issue_cost = Hash.new
