@@ -57,13 +57,7 @@
     <%= render :partial=>'user_day_table' %>
 
 <%if @this_uid==@crnt_uid || User.current.allowed_to?(:edit_work_time_other_member, @project) %>
-        <input type="button" onclick="$(window).off('beforeunload'); window.onbeforeunload = null; submit();" value="<%= l(:wt_update) %>" />
-        &#58;
-        <input type="button"
-               onclick="location.href='<%=url_for(@link_params.merge(:ticket_del=>"closed"))%>'"
-               value="<%=l(:wt_delete_closed_tickets)%>"
-        />
-        </div>
+    <input type="button" onclick="$(window).off('beforeunload'); window.onbeforeunload = null; submit();" value="<%= l(:wt_update) %>" />
 <%end%>
 
 <%end%>

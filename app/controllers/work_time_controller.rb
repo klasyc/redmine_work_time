@@ -13,7 +13,6 @@ class WorkTimeController < ApplicationController
     require_login || return
     @project = nil
     prepare_values
-    ticket_del
     hour_update
     make_pack
     set_holiday
@@ -37,7 +36,6 @@ class WorkTimeController < ApplicationController
       redirect_to @link_params
       return
     end
-    ticket_del
     hour_update
     make_pack
     member_add_del_check
@@ -291,39 +289,6 @@ private
       Redmine::Plugin.find :redmine_backlogs
       @is_registerd_backlog = true
     rescue Exception => exception
-    end
-  end
-
-  def ticket_del # Ticket deletion process
-    if params.key?("ticket_del") then
-      if params["ticket_del"]=="closed" then # If deleting all closed tickets
-          issues = Issue.
-              joins("INNER JOIN user_issue_months ON user_issue_months.issue=issues.id").
-              where(["user_issue_months.uid=:u",{:u=>@this_uid}]).
-              all
-          issues.each do |issue|
-            if issue.closed? then
-              tgt = UserIssueMonth.
-                  where(["uid=:u and issue=:i",{:u=>@this_uid,:i=>issue.id}]).first
-              tgt.destroy
-            end
-          end
-          return
-      end
-
-      # If deleting a specific ticket
-      src = UserIssueMonth.
-          where(["uid=:u and issue=:i",{:u=>@this_uid,:i=>params["ticket_del"]}]).
-          first
-      if src && src.uid == @crnt_uid then
-          tgts = UserIssueMonth.
-              where(["uid=:u and odr>:o",{:u=>src.uid, :o=>src.odr}]).
-              all
-          tgts.each do |tgt|
-            tgt.odr -= 1; tgt.save# Move all tickets after the specified ticket one step up
-          end
-          src.destroy# Delete the specified ticket
-      end
     end
   end
 
