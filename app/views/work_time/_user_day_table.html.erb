@@ -1,7 +1,7 @@
 <table border="0" id="time_input_table">
   <tr style="background:#fff;font-size:14px">
     <td>&nbsp;</td>
-    <td><%=l(:work_time)%></td>
+    <td><%=l(:wt_hours)%></td>
     <% if @is_registerd_backlog then %>
     <td><%=l(:field_remaining_hours)%></td>
     <% end %>
@@ -52,7 +52,7 @@ prj_pack[:odr_issues].each do |issue_pack|
 
   if issue_pack[:each_entries].length==0 then
 %>
-<!-- 工数エントリなし -->
+<!-- No work entries -->
 <tr id="time_entry_pos<%=issue_id%>_0">
   <td class="<%=issue_css_classes%>">
   <div style="position:relative;width:300px;">
