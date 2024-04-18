@@ -1,4 +1,4 @@
-<%#*************************************************** プロジェクトセレクタ %>
+<%#*************************************************** Project Selector %>
 <%= @restrict_project ? Project.find(@restrict_project).name : ""%>
 
 <select onchange="if (this.value != '') {window.location = this.value;}">
