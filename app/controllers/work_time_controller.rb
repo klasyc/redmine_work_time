@@ -16,7 +16,6 @@ class WorkTimeController < ApplicationController
     ticket_del
     hour_update
     make_pack
-    update_daily_memo(params[:memo]) if params.key?(:memo)
     set_holiday
     @custom_fields = TimeEntryCustomField.all
     @link_params.merge!(:action=>"index")
@@ -42,7 +41,6 @@ class WorkTimeController < ApplicationController
     hour_update
     make_pack
     member_add_del_check
-    update_daily_memo(params[:memo]) if params.key?(:memo)
     set_holiday
     @custom_fields = TimeEntryCustomField.all
     @link_params.merge!(:action=>"show")
@@ -246,10 +244,6 @@ class WorkTimeController < ApplicationController
     render(:layout=>false)
   end
 
-  def ajax_memo_edit # Ajax action to output the daily memo input form
-    render(:layout=>false)
-  end
-
   def ajax_done_ratio_input # Progress % update popup
     prepare_values
     issue_id = params[:issue_id]
@@ -410,7 +404,6 @@ private
             if by_other
               append_text = "\n[#{Time.now.localtime.strftime("%Y-%m-%d %H:%M")}] #{User.current.to_s}"
               append_text += " add time entry of ##{issue.id.to_s}: #{tm_vals[:hours].to_f}h"
-              update_daily_memo(append_text, true)
             end
             new_entry = TimeEntry.new(:project => issue.project, :issue => issue, :author => User.current, :user => @this_user, :spent_on => @this_date)
             new_entry.safe_attributes = tm_vals
@@ -440,14 +433,12 @@ private
           if by_other
             append_text = "\n[#{Time.now.localtime.strftime("%Y-%m-%d %H:%M")}] #{User.current.to_s}"
             append_text += " delete time entry of ##{issue_id.to_s}: -#{tm.hours.to_f}h-"
-            update_daily_memo(append_text, true)
           end
           tm.destroy
         else
           if by_other && tm_vals.key?(:hours) && tm.hours.to_f != tm_vals[:hours].to_f
             append_text = "\n[#{Time.now.localtime.strftime("%Y-%m-%d %H:%M")}] #{User.current.to_s}"
             append_text += " update time entry of ##{issue_id.to_s}: -#{tm.hours.to_f}h- #{tm_vals[:hours].to_f}h"
-            update_daily_memo(append_text, true)
           end
           tm.safe_attributes = tm_vals
           tm.save
@@ -557,33 +548,6 @@ private
       pos += 1
     end
 
-  end
-
-  def update_daily_memo(text, append = false) # Update daily memo
-    year = params[:year] || return
-    month = params[:month] || return
-    day = params[:day] || return
-    user_id = params[:user] || return
-
-    # Find existing memo for the user and date
-    date = Date.new(year.to_i,month.to_i,day.to_i)
-    memo = WtDailyMemo.where(["day=:d and user_id=:u",{:d=>date,:u=>user_id}]).first
-
-    if memo then
-      # If memo exists
-      text = memo.description + text if append
-      memo.description = text
-      memo.updated_on = Time.now
-      memo.save # Update memo
-    else
-      # If memo doesn't exist, create a new one
-      now = Time.now
-      WtDailyMemo.create(:user_id=>user_id,
-                         :day=>date,
-                         :created_on=>now,
-                         :updated_on=>now,
-                         :description=>text)
-    end
   end
 
   ################################ Set Holiday
