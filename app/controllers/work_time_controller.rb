@@ -469,16 +469,4 @@ private
       prj_pack[:ref_issues][id]
   end
 
-  def sum_or_nil(v1, v2)
-    if v2.blank?
-      v1
-    else
-      if v1.blank?
-        v2
-      else
-        v1 + v2
-      end
-    end
-  end
-
 end
