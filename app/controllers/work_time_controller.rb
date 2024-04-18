@@ -87,12 +87,6 @@ class WorkTimeController < ApplicationController
 
           @add_issue = add_issue
 
-          unless UserIssueMonth.exists?(["uid=:u and issue=:i",{:u=>uid, :i=>@add_issue_id}]) then
-            # If there are no existing records, add a new one
-            UserIssueMonth.create(:uid=>uid, :issue=>@add_issue_id,
-              :odr => UserIssueMonth.where(["uid = ?", uid]).count + 1
-            )
-          end
         end
       end
     end
