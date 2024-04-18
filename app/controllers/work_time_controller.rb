@@ -171,27 +171,6 @@ class WorkTimeController < ApplicationController
     render(:layout=>false)
   end
 
-  def ajax_add_tickets_input
-    prepare_values
-    @select_projects = Project.
-        joins("LEFT JOIN wt_project_orders ON wt_project_orders.dsp_prj=projects.id AND wt_project_orders.uid=#{User.current.id}").
-        select("projects.*, coalesce(wt_project_orders.dsp_pos,100000) as pos").
-        order("pos,name").
-        all
-    render(:layout=>false)
-  end
-
-  def ajax_add_tickets_input_select # Action that returns the content inserted (updated) by Ajax in the multiple ticket selection window
-    prepare_values
-    @issues = Issue.
-        includes(:assigned_to).
-        where(["project_id=:p",{:p=>params[:prj]}]).
-        order("id DESC").
-        all
-
-    render(:layout=>false)
-  end
-
   def ajax_add_tickets_insert # Ajax action to insert into daily work time
     prepare_values
 

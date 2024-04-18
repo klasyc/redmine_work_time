@@ -63,18 +63,6 @@
                onclick="location.href='<%=url_for(@link_params.merge(:ticket_del=>"closed"))%>'"
                value="<%=l(:wt_delete_closed_tickets)%>"
         />
-        <div id="add_ticket_area" style="display: inline-block;_display: inline;">
-          <input type="button"
-               onclick="jQuery.ajax({
-                       url: '<%=url_for(:action=>"ajax_add_tickets_input")%>',
-                       data:{asynchronous:true, method:'get'},
-                       success: function(response){
-                               jQuery('#add_ticket_area').replaceWith(response);
-                               }
-                       });
-                       return false;"
-               value="<%=l(:wt_add_ticket)%>"
-          />
         </div>
 <%end%>
 
