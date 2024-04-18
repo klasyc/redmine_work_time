@@ -13,8 +13,6 @@ class WorkTimeController < ApplicationController
     require_login || return
     @project = nil
     prepare_values
-    ticket_pos
-    prj_pos
     ticket_del
     hour_update
     make_pack
@@ -40,8 +38,6 @@ class WorkTimeController < ApplicationController
       redirect_to @link_params
       return
     end
-    ticket_pos
-    prj_pos
     ticket_del
     hour_update
     make_pack
@@ -96,15 +92,15 @@ class WorkTimeController < ApplicationController
       csv_data << %Q|,"#{date}"|
     end
     csv_data << "\n"
-    
+
     @month_pack[:odr_prjs].each do |prj_pack|
       next if prj_pack[:count_issues] == 0
       prj_pack[:odr_issues].each do |issue_pack|
         next if issue_pack[:count_hours] == 0
         issue = issue_pack[:issue]
-        
+
         csv_data << %Q|"##{issue.id} #{issue.subject}"|
-        
+
         (@first_date..@last_date).each do |date|
           if issue_pack[:total_by_day].has_key?(date) then
             csv_data << %Q|,"#{issue_pack[:total_by_day][date]}"|
@@ -112,7 +108,7 @@ class WorkTimeController < ApplicationController
             csv_data << %Q|,""|
           end
         end
-        
+
         csv_data << "\n"
       end
     end
@@ -126,8 +122,6 @@ class WorkTimeController < ApplicationController
     authorize
     prepare_values
     change_member_position
-    change_ticket_position
-    change_project_position
     member_add_del_check
     calc_total
     @link_params.merge!(:action=>"total")
@@ -138,11 +132,9 @@ class WorkTimeController < ApplicationController
     authorize
     prepare_values
     change_member_position
-    change_ticket_position
-    change_project_position
     member_add_del_check
     calc_total
-    
+
     csv_data = %Q|"user","relayed project","relayed ticket","project","ticket","spent time"\n|
     #-------------------------------------- メンバーのループ
     @members.each do |mem_info|
@@ -159,7 +151,7 @@ class WorkTimeController < ApplicationController
         next unless @prj_cost[dsp_prj].key?(-1) # 値の無いプロジェクトはパス
         next if @prj_cost[dsp_prj][-1] == 0 # 値の無いプロジェクトはスパ
         prj =Project.find_by_id(dsp_prj)
-        
+
         #-------------------------------------- チケットのループ
         tickets = WtTicketRelay.order("position").all
         tickets.each do |tic|
@@ -193,8 +185,6 @@ class WorkTimeController < ApplicationController
     authorize
     prepare_values
     change_member_position
-    change_ticket_position
-    change_project_position
     member_add_del_check
     calc_total
 
@@ -243,8 +233,6 @@ class WorkTimeController < ApplicationController
     authorize
     prepare_values
     change_member_position
-    change_ticket_position
-    change_project_position
     member_add_del_check
     calc_total
     @link_params.merge!(:action=>"edit_relay")
@@ -256,8 +244,6 @@ class WorkTimeController < ApplicationController
     authorize
     prepare_values
     change_member_position
-    change_ticket_position
-    change_project_position
     member_add_del_check
     calc_total
     respond_to do |format|
@@ -273,11 +259,9 @@ class WorkTimeController < ApplicationController
     authorize
     prepare_values
     change_member_position
-    change_ticket_position
-    change_project_position
     member_add_del_check
     calc_total
-    
+
     csv_data = %Q|"user","project","ticket","spent time"\n|
     #-------------------------------------- Loop through members
     @members.each do |mem_info|
@@ -294,7 +278,7 @@ class WorkTimeController < ApplicationController
         next unless @r_prj_cost[dsp_prj].key?(-1) # Skip projects without values
         next if @r_prj_cost[dsp_prj][-1] == 0 # Skip projects without values
         prj = Project.find_by_id(dsp_prj)
-        
+
         #-------------------------------------- Loop through tickets
         tickets = WtTicketRelay.order("position").all
         tickets.each do |tic|
@@ -324,8 +308,6 @@ class WorkTimeController < ApplicationController
     authorize
     prepare_values
     change_member_position
-    change_ticket_position
-    change_project_position
     member_add_del_check
     calc_total
 
@@ -618,101 +600,6 @@ private
     end
   end
 
-  def ticket_pos
-    return if @this_uid != @crnt_uid
-
-    # Remove duplicates and normalize order
-    if order_normalization(UserIssueMonth, :issue, :order=>"odr", :conditions=>["uid=:u",{:u=>@this_uid}]) then
-      @message ||= ''
-      #@message += '<div style="background:#faa;">Warning: normalize UserIssueMonth</div>'
-      return
-    end
-
-    # Process ticket position change request
-    if params.key?("ticket_pos") && params[:ticket_pos] =~ /^(.*)_(.*)$/ then
-      tid = $1.to_i
-      dst = $2.to_i
-      src = UserIssueMonth.where(["uid=:u and issue=:i", {:u=>@this_uid,:i=>tid}]).first
-      if src then # If changing position
-        if src.odr > dst then # Move ticket forward
-          tgts = UserIssueMonth.
-              where(["uid=:u and odr>=:o1 and odr<:o2", {:u=>src.uid, :o1=>dst, :o2=>src.odr}]).
-              all
-          tgts.each do |tgt|
-            tgt.odr += 1; tgt.save# Move each position one step back
-          end
-          src.odr = dst; src.save
-        else # Move ticket backward
-          tgts = UserIssueMonth.
-              where(["uid=:u and odr<=:o1 and odr>:o2",{:u=>src.uid, :o1=>dst, :o2=>src.odr}]).
-              all
-          tgts.each do |tgt|
-            tgt.odr -= 1; tgt.save# Move each position one step forward
-          end
-          src.odr = dst; src.save
-        end
-      else
-        # If it's a new position
-        tgts = UserIssueMonth.
-            where(["uid=:u and odr>=:o1", {:u=>@this_uid, :o1=>dst}]).
-            all
-        tgts.each do |tgt|
-          tgt.odr += 1; tgt.save# Move each position one step back
-        end
-        UserIssueMonth.create(:uid=>@this_uid, :issue=>tid, :odr=>dst) # Add new position
-      end
-    end
-  end
-
-  def prj_pos
-    return if @this_uid != @crnt_uid
-
-    # Remove duplicates and normalize order
-    if order_normalization(WtProjectOrders, :dsp_prj, :order=>"dsp_pos", :conditions=>["uid=:u",{:u=>@this_uid}]) then
-      @message ||= ''
-      #@message += '<div style="background:#faa;">Warning: normalize WtProjectOrders</div>'
-      return
-    end
-
-    # Process project position change request
-    if params.key?("prj_pos") && params[:prj_pos] =~ /^(.*)_(.*)$/ then
-      tid = $1.to_i
-      dst = $2.to_i
-      src = WtProjectOrders.
-          where(["uid=:u and dsp_prj=:d",{:u=>@this_uid, :d=>tid}]).
-          first
-
-      if src then # If position change
-        if src.dsp_pos > dst then # If moving the project forward
-          tgts = WtProjectOrders.
-              where(["uid=:u and dsp_pos>=:o1 and dsp_pos<:o2",{:u=>@this_uid, :o1=>dst, :o2=>src.dsp_pos}]).
-              all
-          tgts.each do |tgt|
-            tgt.dsp_pos += 1; tgt.save# Move each position one step back
-          end
-          src.dsp_pos = dst; src.save
-        else # If moving the project backward
-          tgts = WtProjectOrders.
-              where(["uid=:u and dsp_pos<=:o1 and dsp_pos>:o2",{:u=>@this_uid, :o1=>dst, :o2=>src.dsp_pos}]).
-              all
-          tgts.each do |tgt|
-            tgt.dsp_pos -= 1; tgt.save# Move each position one step forward
-          end
-          src.dsp_pos = dst; src.save
-        end
-      else
-        # If it's a new position
-          tgts = WtProjectOrders.
-              where(["uid=:u and dsp_pos>=:o1",{:u=>@this_uid, :o1=>dst}]).
-              all
-          tgts.each do |tgt|
-            tgt.dsp_pos += 1; tgt.save# Move each position one step back
-          end
-          WtProjectOrders.create(:uid=>@this_uid, :dsp_prj=>tid, :dsp_pos=>dst)
-      end
-    end
-  end
-
   def ticket_del # Ticket deletion process
     if params.key?("ticket_del") then
       if params["ticket_del"]=="closed" then # If deleting all closed tickets
@@ -924,7 +811,7 @@ private
       end
       pos += 1
     end
-    
+
   end
 
   def update_daily_memo(text, append = false) # Update daily memo
@@ -1002,90 +889,6 @@ private
         @message += '<div style="background:#faa;">'+l(:wt_no_permission)+'</div>'
         return
       end
-    end
-  end
-
-  def change_ticket_position
-    # Remove duplicates and normalize order
-    if order_normalization(WtTicketRelay, :issue_id, :order=>"position") then
-      @message ||= ''
-      #@message += '<div style="background:#faa;">Warning: normalize WtTicketRelay</div>'
-      return
-    end
-
-    ################################### Change ticket position
-    if params.key?("ticket_pos") && params[:ticket_pos]=~/^(.*)_(.*)$/ then
-      if User.current.allowed_to?(:edit_work_time_total, @project) then
-        issue_id = $1.to_i
-        dst = $2.to_i
-        relay = WtTicketRelay.where(["issue_id=:i",{:i=>issue_id}]).first
-        if relay then
-          if relay.position > dst then # Move forward
-            tgts = WtTicketRelay.
-                where(["position>=:p1 and position<:p2",{:p1=>dst, :p2=>relay.position}]).
-                all
-            tgts.each do |mv|
-              mv.position+=1; mv.save # Move position one by one forward
-            end
-            relay.position=dst; relay.save
-          end
-          if relay.position < dst then # Move backward
-            tgts = WtTicketRelay.
-                where(["position<=:p1 and position>:p2",{:p1=>dst, :p2=>relay.position}]).
-                all
-            tgts.each do |mv|
-              mv.position-=1; mv.save # Move position one by one backward
-            end
-            relay.position=dst; relay.save
-          end
-        end
-      else
-        @message ||= ''
-        @message += '<div style="background:#faa;">'+l(:wt_no_permission)+'</div>'
-        return
-      end
-    end
-  end
-
-
-  def change_project_position
-    # Remove duplicates and normalize order
-    if order_normalization(WtProjectOrders, :dsp_prj, :order=>"dsp_pos", :conditions=>"uid=-1") then
-      @message ||= ''
-      #@message += '<div style="background:#faa;">Warning: normalize WtProjectOrders</div>'
-      return
-    end
-
-    ################################### Change project position
-    return if !params.key?("prj_pos") # If no position change parameter, skip
-    return if !(params[:prj_pos]=~/^(.*)_(.*)$/) # If parameter format is incorrect, skip
-    dsp_prj = $1.to_i
-    dst = $2.to_i
-
-    if !User.current.allowed_to?(:edit_work_time_total, @project) then
-       # If no permission, skip
-      @message ||= ''
-      @message += '<div style="background:#faa;">'+l(:wt_no_permission)+'</div>'
-      return
-    end
-
-    po = WtProjectOrders.where(["uid=-1 and dsp_prj=:d",{:d=>dsp_prj}]).first
-    return if po == nil # If the target display project doesn't exist, skip
-
-    if po.dsp_pos > dst then # Move forward
-      tgts = WtProjectOrders.where(["uid=-1 and dsp_pos>=:o1 and dsp_pos<:o2",{:o1=>dst, :o2=>po.dsp_pos}]).all
-      tgts.each do |mv|
-        mv.dsp_pos+=1; mv.save # Move position one by one forward
-      end
-      po.dsp_pos=dst; po.save
-    end
-
-    if po.dsp_pos < dst then # Move backward
-      tgts = WtProjectOrders.where(["uid=-1 and dsp_pos<=:o1 and dsp_pos>:o2",{:o1=>dst, :o2=>po.dsp_pos}]).all
-      tgts.each do |mv|
-        mv.dsp_pos-=1; mv.save # Move position one by one backward
-      end
-      po.dsp_pos=dst; po.save
     end
   end
 
@@ -1230,34 +1033,6 @@ private
                  :count_prjs=>0, :count_issues=>0}
     @day_pack[:total_by_day].default = 0
 
-    # Create display data in project order
-    dsp_prjs = Project.joins("INNER JOIN wt_project_orders ON wt_project_orders.dsp_prj=projects.id").
-        where(["wt_project_orders.uid=:u",{:u=>@this_uid}]).
-        select("projects.*, wt_project_orders.dsp_pos as dsp_pos").
-        order("wt_project_orders.dsp_pos").
-        all
-    dsp_prjs.each do |prj|
-      next if @restrict_project && @restrict_project!=prj.id
-      make_pack_prj(@month_pack, prj, prj.dsp_pos)
-      make_pack_prj(@day_pack, prj, prj.dsp_pos)
-    end
-    @prj_odr_max = dsp_prjs.length
-
-    # Create display data in ticket order
-    dsp_issues = Issue.joins("INNER JOIN user_issue_months ON user_issue_months.issue=issues.id").
-        where(["user_issue_months.uid=:u",{:u=>@this_uid}]).
-        order("user_issue_months.odr").
-        select("issues.*, user_issue_months.odr").
-        all
-    dsp_issues.each do |issue|
-      next if @restrict_project && @restrict_project!=issue.project.id
-      month_prj_pack = make_pack_prj(@month_pack, issue.project)
-      make_pack_issue(month_prj_pack, issue, issue.odr)
-      day_prj_pack = make_pack_prj(@day_pack, issue.project)
-      make_pack_issue(day_prj_pack, issue, issue.odr)
-    end
-    @issue_odr_max = dsp_issues.length
-
     # Aggregate work time for the month
     hours = TimeEntry.
         includes(:issue).
@@ -1342,11 +1117,13 @@ private
     issues = Issue.
         joins("INNER JOIN issue_statuses ist on ist.id = issues.status_id ").
         joins("LEFT JOIN groups_users on issues.assigned_to_id = group_id").
+        joins("LEFT JOIN projects prj on issues.project_id = prj.id").
         where(["1 = 1 and
                 (  (issues.assigned_to_id = :u or groups_users.user_id = :u) and
                    issues.start_date < :t2 and
                    ist.is_closed = :closed
                 )", {:u => @this_uid, :t2 => t2, :closed => false}]).
+        order("prj.name, issues.subject").
         all
     issues.each do |issue|
       next if @restrict_project && @restrict_project!=issue.project.id
@@ -1429,34 +1206,6 @@ private
         v1 + v2
       end
     end
-  end
-
-  # Remove duplicates and normalize order
-  def order_normalization(table, key_column, find_params)
-    raise "need table" unless table
-    order = find_params[:order]
-    raise "need :order" unless order
-    update = false
-
-    tgts = table.
-        where(find_params[:conditions]).
-        order(order).
-        all
-    keys = []
-    tgts.each do |tgt|
-      if keys.include?(tgt[key_column]) then
-        tgt.destroy
-        update = true
-      else
-        keys.push(tgt[key_column])
-        if tgt[order] != keys.length then
-          tgt[order] = keys.length
-          tgt.save
-          update = true
-        end
-      end
-    end
-    update
   end
 
 end
