@@ -1,6 +1,7 @@
 cs:
   work_time: "WorkTime"
   wt_hours: "Počet hodin"
+  wt_project_issue: "Projekt / úkol"
   wt_update: "Uložit změny"
   wt_month_names: "Led,Úno,Bře,Dub,Kvě,Čer,Čnc,Srp,Zář,Říj,Lis,Pro"
   wt_week_day_names: "Ne,Po,Út,St,Čt,Pá,So"
