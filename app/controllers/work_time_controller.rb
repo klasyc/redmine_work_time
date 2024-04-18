@@ -192,7 +192,8 @@ class WorkTimeController < ApplicationController
     render(:layout=>false)
   end
 
-  def ajax_add_tickets_insert # Ajax action to insert into daily work timeprepare_values
+  def ajax_add_tickets_insert # Ajax action to insert into daily work time
+    prepare_values
 
     uid = params[:user]
     @add_issue_id = params[:add_issue]
