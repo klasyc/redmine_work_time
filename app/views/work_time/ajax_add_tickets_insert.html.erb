@@ -1,5 +1,5 @@
 ﻿<%if @add_issue then%>
-<tr class="duplicated_issue" id="time_entry_pos<%=@add_issue_id%>_<%=@add_count%>">
+<tr class="duplicated_issue daily_report_issue" id="time_entry_pos<%=@add_issue_id%>_<%=@add_count%>">
   <td >
   <div style="position:relative;width:300px;">
     <%= link_to(@issueHtml.html_safe, {:controller=>"issues", :action=>"show", :id=>@add_issue.id},
@@ -7,7 +7,7 @@
   </div>
   </td>
   <td>
-    <%= text_field_tag("new_time_entry["+@add_issue_id+"]["+@add_count+"][hours]", "", :size=>5, :oninput => "sumDayTimes()") %>
+    <%= text_field_tag("new_time_entry["+@add_issue_id+"]["+@add_count+"][hours]", "", :size=>5, :oninput => "sumDayTimes()", :class => "hours") %>
   </td>
   <% if @is_registerd_backlog then %>
   <td>

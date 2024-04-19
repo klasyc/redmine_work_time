@@ -1,6 +1,12 @@
 <%=javascript_include_tag "work_time", :plugin=>'redmine_work_time' %>
 <%=stylesheet_link_tag 'work_time', :plugin => 'redmine_work_time' %>
 
+<script type="text/javascript">
+  $(document).ready(function() {
+    install_filter_handlers();
+  });
+</script>
+
 <%= @message.html_safe %>
 <div class="contextual">
 <%= render :partial=>'select_project' %>
@@ -38,6 +44,14 @@
     <%= hidden_field_tag('day', @this_date.day) %>
     <%= hidden_field_tag('user', @this_uid) %>
     <%= hidden_field_tag('prj', @restrict_project) %>
+
+    <%=l(:wt_filter)%>
+    <%= radio_button_tag 'filter_issues', 'all', true %>
+    <label for="filter_issues_all"><%=l(:wt_filter_all)%></label>
+    <%= radio_button_tag 'filter_issues', 'month' %>
+    <label for="filter_issues_month"><%=l(:wt_filter_month)%></label>
+    <%= radio_button_tag 'filter_issues', 'day' %>
+    <label for="filter_issues_day"><%=l(:wt_filter_day)%></label>
 
     <%= render :partial=>'user_day_table' %>
 

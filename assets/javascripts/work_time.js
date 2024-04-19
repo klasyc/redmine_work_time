@@ -1,79 +1,3 @@
-function ticket_pos(url, issue, pos, max)
-{
-  var new_pos = prompt("Destination No.", pos);
-  if(new_pos != null) {
-    if((new_pos>=1) && (new_pos<=max))
-      location.replace(url+"&ticket_pos="+issue+"_"+new_pos);
-    else 
-      alert("Out of range!");
-  }
-}
-
-function prj_pos(url, prj, pos, max)
-{
-  var new_pos = prompt("Destination No.", pos);
-  if(new_pos != null) {
-    if((new_pos>=1) && (new_pos<=max))
-      location.replace(url+"&prj_pos="+prj+"_"+new_pos);
-    else 
-      alert("Out of range!");
-  }
-}
-
-function member_pos(url, user_id, pos, max)
-{
-  var new_pos = prompt("Distination No.", pos);
-  if(new_pos != null) {
-    if((new_pos>=1) && (new_pos<=max))
-      location.replace(url+"&member_pos="+user_id+"_"+new_pos);
-    else 
-      alert("Out of rnage!");
-  }
-}
-
-function set_ticket_relay_by_issue_relation(ajax_url) {
-  $('[id^=ticket_relay_]').each(function(){
-    var issue_id = $(this).attr('id').replace(/.*([^_]+)$/, "$1");
-    jQuery.ajax({
-      url: ajax_url + '&issue_id=' + issue_id,
-      data:{asynchronous:true, method:'get'},
-      success: function(response) {
-        jQuery('#ticket_relay_'+issue_id).html(response);
-      }
-    });
-  })
-}
-
-function input_done_ratio(ajax_url, issue_id) {
-  jQuery.ajax({
-    url: ajax_url + "&issue_id=" + issue_id,
-    data: {asynchronous: true, method: 'get'},
-    success: function (response) {
-      jQuery('[name="done_ratio'+ issue_id+'"]:first').replaceWith(response);
-    }
-  });
-}
-
-function update_done_ratio(ajax_url, issue_id) {
-  var done_ratio = $('#input_ratio'+issue_id).val();
-  jQuery.ajax({
-    url:ajax_url+"&issue_id="+issue_id+"&done_ratio="+done_ratio,
-    data:{asynchronous:true, method:'get'},
-    success:function(response){
-      jQuery('[name="done_ratio'+ issue_id+'"]').replaceWith(response);
-    }
-  });
-}
-
-function checkEnter(e)
-{
-  if (!e) var e = window.event;
-  if(e.keyCode == 13)
-    return true;
-  else
-    return false;
-}
-
 //------------------------------------------------- for show.html.erb
 var add_ticket_count = 1;
 
@@ -89,54 +13,75 @@ function dup_ticket(ajax_url, insert_pos, id)
   add_ticket_count ++;
 }
 
-function tickets_insert(ajax_url, tickets)
+// Hides projects that have no issues visible.
+function set_project_visibility()
 {
-  for(i=0; i<tickets.length;i++) {
-    jQuery.ajax({
-      url:ajax_url+"&add_issue="+tickets[i]+"&count="+add_ticket_count,
-      data:{asynchronous:true, method:'get'},
-      success:function(response){
-        jQuery('#time_input_table_bottom').before(response);
+  // If the project is immediately followed by the next project, then it must be hidden and vice versa.
+  $("#time_input_table tr.daily_report_project").each(function() {
+    var project = $(this);
+    var next = project.next();
+    while (next.length > 0 && next.css("display") == "none") {
+      next = next.next();
+    }
+    if (next.hasClass("daily_report_issue")) {
+      project.show();
+    } else {
+      project.hide();
+    }
+  });
+}
+
+// Installs click handlers for the issue filtering radio buttons.
+function install_filter_handlers()
+{
+  // Display all issues and projects:
+  $("#filter_issues_all").click(function() {
+    $("#time_input_table tr.daily_report_issue").show();
+    set_project_visibility();
+  });
+
+  // Display issues already used in the monthly report.
+  $("#filter_issues_month").click(function() {
+    $("#time_input_table tr.daily_report_issue").each(function() {
+      // Try to find the issue in the monthly report.
+      // The issue id is stored in the data-issue attribute of the issues's hyperlink.
+      var issue = $(this);
+      var issue_id = issue.find("a.wt_iss_link").data("issue");
+
+      // Now try to match the issue id with the monthly report.
+      var monthlyLinks = $("#monthly_report").find("a.wt_iss_link[data-issue=" + issue_id + "]");
+      if (monthlyLinks.length > 0) {
+        issue.show();
+      } else {
+        issue.hide();
       }
     });
-    add_ticket_count ++;
-  }
-}
 
-function tickets_inputed(ajax_url)
-{
-  var vals = document.getElementById("input_ids").value;
-  var tickets = vals.split(',');
-  tickets_insert(ajax_url, tickets);
-}
+    set_project_visibility();
+  });
 
-function tickets_selected(ajax_url, issue_id)
-{
-  var tickets = [issue_id];
-  tickets_insert(ajax_url, tickets);
-}
-
-function tickets_checked(ajax_url)
-{
-  var $checked = $('[name="ticket_select_check"]:checked');
-  var tickets = $checked.map(function(i,e){return $(this).val()});
-  tickets_insert(ajax_url, tickets);
-}
-
-function statusUpdateOnDailyTable(name) {
-  obj = document.getElementsByName(name)[0];
-  obj.style.backgroundColor = '#cfc';
-  index = obj.selectedIndex;
-  v = obj.options[index].value;
-  obj.options[index].value = 'M'+v;
+  // Display all issues which have hours filled in.
+  $("#filter_issues_day").click(function() {
+    $("#time_input_table tr.daily_report_issue").each(function() {
+      const hoursInput = $(this).find("input.hours");
+      if (hoursInput.length > 0) {
+        if (hoursInput.first().val() == "") {
+          $(this).hide();
+        } else {
+          $(this).show();
+        }
+      }
+    });
+    set_project_visibility();
+  });
 }
 
 //------------- for user_day_table.html.erb
 function sumDayTimes() {
   var total=0;
   var dayInputs;
-  
-  // List all Input elemnets of the page
+
+  // List all Input elements of the page
   dayInputs = document.getElementsByTagName("input");
   for (var i=0; i<dayInputs.length; i++) {
     // Consider only those with an id containing the strings 'time_entry' and 'hours'

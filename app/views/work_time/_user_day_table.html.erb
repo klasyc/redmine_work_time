@@ -29,7 +29,7 @@
 
   jobs = prj_pack[:jobs] || []
 %>
-<tr style="background:#000;color:#fff;">
+<tr style="background:#000;color:#fff;" class="daily_report_project">
   <td>
         <%=prj.name%>
   </td>
@@ -60,7 +60,7 @@ prj_pack[:odr_issues].each do |issue_pack|
   if issue_pack[:each_entries].length==0 then
 %>
 <!-- No work entries -->
-<tr id="time_entry_pos<%=issue_id%>_0">
+<tr id="time_entry_pos<%=issue_id%>_0" class="daily_report_issue">
   <td>
   <div style="position:relative;width:300px;">
     <%= link_to(issue_html,
@@ -69,7 +69,7 @@ prj_pack[:odr_issues].each do |issue_pack|
   </div>
   </td>
   <td>
-    <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][hours]", "", :size=>5, :oninput => "sumDayTimes()") %>
+    <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][hours]", "", :size=>5, :oninput => "sumDayTimes()", :class => "hours") %>
   </td>
   <% if @is_registerd_backlog then %>
   <td>
@@ -128,7 +128,7 @@ prj_pack[:odr_issues].each do |issue_pack|
         end
       end
 %>
-<tr id="time_entry_pos<%=hour_id%>">
+<tr id="time_entry_pos<%=hour_id%>" class="daily_report_issue">
   <td>
   <div style="position:relative;width:300px;">
   <%if !issue.nil? then%>
@@ -140,7 +140,7 @@ prj_pack[:odr_issues].each do |issue_pack|
   </div>
   </td>
   <td>
-    <%= text_field_tag("time_entry["+hour_id.to_s+"][hours]", sprintf("%1.2f", hour.hours), :size=>5, :oninput => "sumDayTimes()") %>
+    <%= text_field_tag("time_entry["+hour_id.to_s+"][hours]", sprintf("%1.2f", hour.hours), :size=>5, :oninput => "sumDayTimes()", :class => "hours") %>
   </td>
   <% if @is_registerd_backlog then %>
   <td>
