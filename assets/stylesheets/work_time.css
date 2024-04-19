@@ -46,3 +46,9 @@ td.wt_iss_assigned_overdue {
 td.wt_iss_assigned_overdue_worked {
   background: #fcf;
 }
+tr.duplicated_issue {
+  background: #ddf;
+}
+tr.duplicated_issue td:last-child {
+  background: white;
+}

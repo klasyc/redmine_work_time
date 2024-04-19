@@ -1,6 +1,6 @@
 ﻿<%if @add_issue then%>
-<tr id="time_entry_pos<%=@add_issue_id%>_<%=@add_count%>">
-  <td>
+<tr class="duplicated_issue" id="time_entry_pos<%=@add_issue_id%>_<%=@add_count%>">
+  <td >
   <div style="position:relative;width:300px;">
     <%= link_to(@issueHtml.html_safe, {:controller=>"issues", :action=>"show", :id=>@add_issue.id},
                 :popup=>true, :class=>'wt_iss_link', :'data-issue'=>@add_issue.id) %>
