@@ -6,6 +6,7 @@
     <td><%=l(:field_remaining_hours)%></td>
     <% end %>
     <td><%=l(:field_activity)%></td>
+    <td><%=l(:wt_field_job)%></td>
     <td><%=l(:field_comments)%></td>
     <% @custom_fields.each do |cf| %>
        <td><%= cf.name %></td>
@@ -25,6 +26,22 @@
     activities.push([act.name, act.id])
     activity_default = act.id if act.is_default
   end
+
+  # Create a list of jobs for the project
+  jobs = []
+
+  # Available jobs are stored in the project description. Each job is on its own line and the line has to start with '- '.
+  prj.description.each_line do |line|
+    if line.start_with?('- ')
+      # The line consists of the job name and its description, both separated by a comma.
+      # The job name is used as the value and the job description is used as the label.
+      job_pair = line[2..-1].strip
+      job, description = job_pair.split(',', 2).map(&:strip)
+      # Description will consist of the job name followed by its description:
+      description = "#{job} - #{description}"
+      jobs.push([description, job])
+    end
+  end
 %>
 <tr style="background:#000;color:#fff;">
   <td>
@@ -34,6 +51,7 @@
   <% if @is_registerd_backlog then %>
   <td>&nbsp;</td>
   <% end %>
+  <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <% @custom_fields.each do |cf| %>
@@ -49,6 +67,9 @@ prj_pack[:odr_issues].each do |issue_pack|
   issue_css_classes = issue_pack[:css_classes]
   issue = Issue.find_by_id(issue_id)
   issue_html = wk_pretty_issue_name issue, issue_id
+
+  # Select the first job by default:
+  job_default = jobs[0]
 
   if issue_pack[:each_entries].length==0 then
 %>
@@ -93,6 +114,11 @@ prj_pack[:odr_issues].each do |issue_pack|
     <%= select_tag "new_time_entry["+issue_id.to_s+"][0][activity_id]", options_for_select(activities,activity_default) %>
   </td>
   <td>
+    <% if !jobs.empty? then %>
+      <%= select_tag "new_time_entry["+issue_id.to_s+"][0][job]", options_for_select(jobs,job_default) %>
+    <% end %>
+  </td>
+  <td>
     <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][comments]", "", :size=>80)%>
   </td>
   <%if @custom_fields.length != 0
@@ -108,6 +134,17 @@ prj_pack[:odr_issues].each do |issue_pack|
     issue_pack[:each_entries].each do |hour_id, hour|
 %>
 <!-- Work entry exists -->
+<%
+      # If the hours comment starts with one of the available jobs, set the job_default to that job
+      # and remove the job from the comment:
+      jobs.each do |job|
+        if hour.comments.start_with?(job[1])
+          job_default = job
+          hour.comments = hour.comments[job[1].length + 2..-1].strip
+          break
+        end
+      end
+%>
 <tr id="time_entry_pos<%=hour_id%>">
   <td class="<%=issue_css_classes%>">
   <div style="position:relative;width:300px;">
@@ -150,6 +187,11 @@ prj_pack[:odr_issues].each do |issue_pack|
   <% end %>
   <td>
     <%= select_tag "time_entry["+hour_id.to_s+"][activity_id]", options_for_select(activities, hour.activity_id), :required => true %>
+  </td>
+  <td>
+    <% if !jobs.empty? then %>
+      <%= select_tag "time_entry["+hour_id.to_s+"][job]", options_for_select(jobs,job_default) %>
+    <% end %>
   </td>
   <td>
     <%= text_field_tag("time_entry["+hour_id.to_s+"][comments]", hour.comments, :size=>80)%>

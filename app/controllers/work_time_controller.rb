@@ -198,6 +198,10 @@ private
             end
             new_entry = TimeEntry.new(:project => issue.project, :issue => issue, :author => User.current, :user => @this_user, :spent_on => @this_date)
             new_entry.safe_attributes = tm_vals
+            # If tm_vals field contains job field, add it to the beginning of the comment
+            if tm_vals.has_key?("job") && !tm_vals["job"].blank? then
+              new_entry.comments = tm_vals["job"] + ", " + new_entry.comments
+            end
             new_entry.save
             append_error_message_html(@message, hour_update_check_error(new_entry, issue_id))
           end
@@ -232,6 +236,10 @@ private
             append_text += " update time entry of ##{issue_id.to_s}: -#{tm.hours.to_f}h- #{tm_vals[:hours].to_f}h"
           end
           tm.safe_attributes = tm_vals
+          # If tm_vals field contains job field, add it to the beginning of the comment
+          if tm_vals.has_key?("job") && !tm_vals["job"].blank? then
+            tm.comments = tm_vals["job"] + ", " + tm.comments
+          end
           tm.save
           append_error_message_html(@message, hour_update_check_error(tm, issue_id))
         end
