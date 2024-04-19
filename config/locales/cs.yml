@@ -3,6 +3,7 @@ cs:
   wt_hours: "Počet hodin"
   wt_project_issue: "Projekt / úkol"
   wt_field_job: "Zakázka"
+  wt_duplicate_issue: "Vykázat další práci na tento úkol"
   wt_update: "Uložit změny"
   wt_month_names: "Led,Úno,Bře,Dub,Kvě,Čer,Čnc,Srp,Zář,Říj,Lis,Pro"
   wt_week_day_names: "Ne,Po,Út,St,Čt,Pá,So"

@@ -36,7 +36,9 @@
      <td><%= custom_field_tag "new_time_entry_"+@add_issue_id+"_"+@add_count, cfv %></td>
       <%end end%>
   <td>
-    <a href="#" onclick="JavaScript:
+    <a href="#"
+      title="<%=l(:wt_duplicate_issue)%>"
+      onclick="JavaScript:
          dup_ticket(
            '<%=url_for(@link_params.merge(:action=>"ajax_add_tickets_insert"))%>',
            'time_entry_pos<%=@add_issue_id%>_<%=@add_count%>',

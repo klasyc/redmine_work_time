@@ -3,6 +3,7 @@ en:
   wt_hours: "Work Time"
   wt_project_issue: "Project / issue"
   wt_field_job: "Job"
+  wt_duplicate_issue: "Report more work on this issue"
   wt_update: "Save"
   wt_month_names: "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
   wt_week_day_names: "Sun,Mon,Tue,Wed,Thu,Fri,Sat"
