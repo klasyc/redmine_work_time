@@ -1,23 +1,9 @@
 ﻿<%if @add_issue then%>
-<tr style="background:#ddf;" id="time_entry_pos<%=@add_issue_id%>_<%=@add_count%>">
+<tr id="time_entry_pos<%=@add_issue_id%>_<%=@add_count%>">
   <td>
   <div style="position:relative;width:300px;">
-    <%=@add_issue.project.name%>
-    <br/>
     <%= link_to(@issueHtml.html_safe, {:controller=>"issues", :action=>"show", :id=>@add_issue.id},
                 :popup=>true, :class=>'wt_iss_link', :'data-issue'=>@add_issue.id) %>
-    <%= print_issue_cost(@add_issue) %>
-
-    <a style="position:absolute;bottom:1px;right:10px;"
-       href="#"
-       onclick="JavaScript:
-         dup_ticket(
-           '<%=url_for(@link_params.merge(:action=>"ajax_add_tickets_insert"))%>',
-           'time_entry_pos<%=@add_issue_id%>_<%=@add_count%>',
-           <%=@add_issue.id%>);
-         return false;">
-      +
-    </a>
   </div>
   </td>
   <td>
@@ -36,6 +22,11 @@
     <%= select_tag "new_time_entry["+@add_issue_id+"]["+@add_count+"][activity_id]", options_for_select(@activities,@activity_default), :required => true %>
   </td>
   <td>
+    <% if !@jobs.empty? then %>
+      <%= select_tag "new_time_entry["+@add_issue_id+"]["+@add_count+"][job]", options_for_select(@jobs,@jobs[0]) %>
+    <% end %>
+  </td>
+  <td>
     <%= text_field_tag("new_time_entry["+@add_issue_id+"]["+@add_count+"][comments]", "", :size=>80)%>
   </td>
   <%if @custom_fields.length != 0
@@ -44,5 +35,15 @@
   %>
      <td><%= custom_field_tag "new_time_entry_"+@add_issue_id+"_"+@add_count, cfv %></td>
       <%end end%>
+  <td>
+    <a href="#" onclick="JavaScript:
+         dup_ticket(
+           '<%=url_for(@link_params.merge(:action=>"ajax_add_tickets_insert"))%>',
+           'time_entry_pos<%=@add_issue_id%>_<%=@add_count%>',
+           <%=@add_issue.id%>);
+         return false;">
+      +
+    </a>
+  </td>
 </tr>
 <%end%>

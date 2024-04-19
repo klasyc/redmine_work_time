@@ -85,6 +85,7 @@ class WorkTimeController < ApplicationController
           end
 
           @add_issue = add_issue
+          @jobs = get_jobs_from_project_description(prj)
 
         end
       end
@@ -161,6 +162,25 @@ private
       @is_registerd_backlog = true
     rescue Exception => exception
     end
+  end
+
+  # Gets the jobs from the project description.
+  def get_jobs_from_project_description(project)
+    jobs = []
+
+    # Available jobs are stored in the project description. Each job is on its own line and the line has to start with '- '.
+    project.description.each_line do |line|
+      if line.start_with?('- ')
+        # The line consists of the job name and its description, both separated by a comma.
+        # The job name is used as the value and the job description is used as the label.
+        job_pair = line[2..-1].strip
+        job, description = job_pair.split(',', 2).map(&:strip)
+        # Description will consist of the job name followed by its description:
+        description = "#{job} - #{description}"
+        jobs.push([description, job])
+      end
+    end
+    jobs # Return the list of job pairs [description, name]
   end
 
   def hour_update # Time entry update request processing
@@ -450,6 +470,7 @@ private
         pack[:odr_prjs].push prj_pack
         pack[:count_prjs] += 1
         prj_pack[:total_by_day].default = 0
+        prj_pack[:jobs] = get_jobs_from_project_description(new_prj)
       end
       pack[:ref_prjs][new_prj.id]
   end

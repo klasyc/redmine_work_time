@@ -27,21 +27,7 @@
     activity_default = act.id if act.is_default
   end
 
-  # Create a list of jobs for the project
-  jobs = []
-
-  # Available jobs are stored in the project description. Each job is on its own line and the line has to start with '- '.
-  prj.description.each_line do |line|
-    if line.start_with?('- ')
-      # The line consists of the job name and its description, both separated by a comma.
-      # The job name is used as the value and the job description is used as the label.
-      job_pair = line[2..-1].strip
-      job, description = job_pair.split(',', 2).map(&:strip)
-      # Description will consist of the job name followed by its description:
-      description = "#{job} - #{description}"
-      jobs.push([description, job])
-    end
-  end
+  jobs = prj_pack[:jobs] || []
 %>
 <tr style="background:#000;color:#fff;">
   <td>
@@ -80,18 +66,6 @@ prj_pack[:odr_issues].each do |issue_pack|
     <%= link_to(issue_html,
                 {:controller=>"issues", :action=>"show", :id=>issue_id},
                 :popup=>true, :class=>'wt_iss_link', :'data-issue'=>issue_id) %>
-    <%if @this_uid==@crnt_uid then%>
-    &nbsp;&nbsp;&nbsp;
-    <a style="position:absolute;bottom:1px;right:10px;"
-       href="#"
-       onclick="dup_ticket(
-                    '<%=url_for(@link_params.merge(:action=>"ajax_add_tickets_insert"))%>',
-                    'time_entry_pos<%=issue_id%>_0',
-                    <%=issue_id%>);
-                return false;">
-      +
-    </a>
-    <%end%>
   </div>
   </td>
   <td>
@@ -124,6 +98,18 @@ prj_pack[:odr_issues].each do |issue_pack|
      <td><%= custom_field_tag "new_time_entry_"+issue_id.to_s+"_0", cfv %></td>
       <%end
      end%>
+  <td>
+    <%if @this_uid==@crnt_uid then%>
+    <a href="#"
+       onclick="dup_ticket(
+                    '<%=url_for(@link_params.merge(:action=>"ajax_add_tickets_insert"))%>',
+                    'time_entry_pos<%=issue_id%>_0',
+                    <%=issue_id%>);
+                return false;">
+      +
+    </a>
+    <%end%>
+  </td>
 </tr>
 <%
   else
@@ -149,19 +135,6 @@ prj_pack[:odr_issues].each do |issue_pack|
                 {:controller=>"issues", :action=>"show", :id=>issue_id},
                 :popup=>true, :class=>'wt_iss_link', :'data-issue'=>issue_id) %>
 
-    <%if @this_uid==@crnt_uid then%>
-    &nbsp;&nbsp;&nbsp;
-
-    <a style="position:absolute;bottom:1px;right:10px;"
-       href="#"
-       onclick="dup_ticket(
-                    '<%=url_for(@link_params.merge(:action=>"ajax_add_tickets_insert"))%>',
-                    'time_entry_pos<%=hour_id%>',
-                    <%=issue_id%>);
-                return false;">
-      +
-    </a>
-    <%end%>
   <%end%>
   </div>
   </td>
@@ -191,6 +164,18 @@ prj_pack[:odr_issues].each do |issue_pack|
   <% hour.custom_field_values.each do |cfv| %>
      <td><%= custom_field_tag "time_entry_"+hour_id.to_s, cfv %></td>
   <% end %>
+  <td>
+    <%if @this_uid==@crnt_uid then%>
+    <a href="#"
+       onclick="dup_ticket(
+                    '<%=url_for(@link_params.merge(:action=>"ajax_add_tickets_insert"))%>',
+                    'time_entry_pos<%=hour_id%>',
+                    <%=issue_id%>);
+                return false;">
+      +
+    </a>
+    <%end%>
+  </td>
 </tr>
 <%
    end
