@@ -31,11 +31,6 @@ class WorkTimeController < ApplicationController
     find_project
     authorize
     prepare_values
-    if @this_user.nil? || !@this_user.allowed_to?(:view_work_time_tab, @project)
-      @link_params.merge!(:action=>"relay_total")
-      redirect_to @link_params
-      return
-    end
     hour_update
     make_pack
     set_holiday
@@ -119,7 +114,8 @@ private
   def prepare_values
     # ************************************* Value preparation
     @crnt_uid = User.current.id
-    @this_uid = (params.key?(:user) && User.current.allowed_to?(:view_work_time_other_member, @project)) ? params[:user].to_i : @crnt_uid
+    can_see_others = User.current.admin? || User.current.allowed_to?(:view_work_time_other_member, @project)
+    @this_uid = (params.key?(:user) && can_see_others) ? params[:user].to_i : @crnt_uid
     @this_user = User.find_by_id(@this_uid)
 
     if @project &&
@@ -162,6 +158,8 @@ private
       @is_registerd_backlog = true
     rescue Exception => exception
     end
+
+    @members = create_member_list(@project)
   end
 
   # Gets the jobs from the project description.
@@ -496,6 +494,35 @@ private
         issue_pack[:cnt_childrens] = cnt_childrens
       end
       prj_pack[:ref_issues][id]
+  end
+
+  # Creates a list of users. If the project is specified, takes only the members of the project.
+  def create_member_list(project)
+    members = []
+    pos = 1
+
+    # If project id is not specified, get the list of all users directly from the users table:
+    if project.nil?
+      mem = User.order("lastname").all
+      mem.each do |m|
+        next if m.nil?
+        members.push([pos, m])
+        pos += 1
+      end
+    else
+      # If the project is specified, get the list of members from the members table:
+      mem = Member.
+        joins("LEFT JOIN users on users.id = members.user_id").
+        where(["project_id=:prj", {:prj=>project.id}]).
+        order("users.lastname").
+        all
+      mem.each do |m|
+        next if m.nil? || m.user.nil? || ! m.user.allowed_to?(:view_work_time_tab, @project)
+        members.push([pos, m.user])
+        pos += 1
+      end
+    end
+    members
   end
 
 end

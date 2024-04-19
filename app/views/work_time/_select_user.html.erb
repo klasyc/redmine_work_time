@@ -1,5 +1,4 @@
 ﻿<%#**************************************************** User selector %>
-<%if @project then%>
 <%=l(:wt_select_user)%>
 <select onchange="if (this.value != '') {window.location = this.value;}">
   <option value="">---</option>
@@ -17,4 +16,3 @@ members_name_id.each do |member_name_id|
 end
 %>
 </select>
-<%end%>

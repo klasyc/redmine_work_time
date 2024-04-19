@@ -10,9 +10,8 @@
 <%= @message.html_safe %>
 <div class="contextual">
 <%= render :partial=>'select_project' %>
-<%if User.current.allowed_to?(:view_work_time_other_member, @project) then%>
+<%if User.current.allowed_to?(:view_work_time_other_member, @project) || User.current.admin then%>
   <%= render :partial=>'select_user', :locals=>{:link_params=>@link_params} %>
-  <%= link_to(l(:wt_relay_total), @link_params.merge(:action=>"relay_total")) %>
 <%end%>
   <%if User.current.admin then%>
       <%if WtHolidays.where(["holiday=:h and deleted_on is null",{:h=>@this_date}]).all.size == 0 then %>
