@@ -88,6 +88,10 @@ div.wt_add_ticket_block {
   height: auto;
   width: auto;
 }
+#time_input_table tfoot input[type=button]:hover:enabled {
+  cursor: pointer;
+  background-color: lightgreen;
+}
 
 /*
  * We have to enable overflows, otherwise the sticky header/footer will not work.
