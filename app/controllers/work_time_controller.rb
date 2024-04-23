@@ -13,7 +13,12 @@ class WorkTimeController < ApplicationController
     require_login || return
     @project = nil
     prepare_values
-    hour_update
+    # If the number of hours have been updated, redirect to the same page.
+    # This is to prevent the user from updating the hours again when refreshing the page.
+    if hour_update then
+      redirect_to @link_params
+      return
+    end
     make_pack
     set_holiday
     @custom_fields = TimeEntryCustomField.all
@@ -183,6 +188,7 @@ private
 
   def hour_update # Time entry update request processing
     by_other = false
+    update_done = false
     if @this_uid != @crnt_uid
       if User.current.allowed_to?(:edit_work_time_other_member, @project)
         by_other = true
@@ -220,6 +226,7 @@ private
             if tm_vals.has_key?("job") && !tm_vals["job"].blank? then
               new_entry.comments = tm_vals["job"] + ", " + new_entry.comments
             end
+            update_done = true
             new_entry.save
             append_error_message_html(@message, hour_update_check_error(new_entry, issue_id))
           end
@@ -258,6 +265,7 @@ private
           if tm_vals.has_key?("job") && !tm_vals["job"].blank? then
             tm.comments = tm_vals["job"] + ", " + tm.comments
           end
+          update_done = true
           tm.save
           append_error_message_html(@message, hour_update_check_error(tm, issue_id))
         end
@@ -266,6 +274,7 @@ private
         end
       end
     end
+    update_done # Return true if the update is done
   end
 
   def issue_update_to_remain_and_more(issue_id, vals)
