@@ -57,6 +57,9 @@ function install_filter_handlers()
       }
     });
 
+    // Call this method twice, otherwise the project visibility is not set correctly when
+    // switching from filled to monthly issues.
+    set_project_visibility();
     set_project_visibility();
   });
 
