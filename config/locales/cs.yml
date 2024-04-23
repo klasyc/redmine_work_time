@@ -1,6 +1,6 @@
 cs:
   work_time: "WorkTime"
-  wt_hours: "Počet hodin"
+  wt_hours: "Čas"
   wt_project_issue: "Projekt / úkol"
   wt_field_job: "Zakázka"
   wt_duplicate_issue: "Vykázat další práci na tento úkol"
