@@ -21,34 +21,59 @@ div.wt_add_ticket_block {
   border: 1px solid black;
 }
 
-/* use day table */
-td.wt_iss_default {
-  background: #fff;
+#time_input_table thead,
+#time_input_table tfoot {
+  position: sticky;
+  background: #FAFAFA;
 }
-td.wt_iss_worked {
-  background: #cfc;
+#time_input_table thead {
+  top: 0;
 }
-td.wt_iss_overdue {
-  background: #ffc;
+#time_input_table thead th {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
 }
-td.wt_iss_overdue_worked {
-  background: #ccc;
+#time_input_table tfoot {
+  bottom: 0;
 }
-td.wt_iss_assigned {
-  background: #cff;
+#time_input_table tfoot tr:first-child td {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-weight: bold;
 }
-td.wt_iss_assigned_worked {
-  background: #ccf;
+#time_input_table thead {
+  /* Space from the top of the page. We have to move the header below the main menu which is always on top. */
+  inset-block-start: 31px;
 }
-td.wt_iss_assigned_overdue {
-  background: #fcc;
+#time_input_table tfoot {
+  inset-block-end: 0;
 }
-td.wt_iss_assigned_overdue_worked {
-  background: #fcf;
+#time_input_table thead input {
+  width: auto;
 }
-tr.duplicated_issue {
-  background: #ddf;
+#time_input_table {
+  border-spacing: 0;
 }
-tr.duplicated_issue td:last-child {
-  background: white;
+#time_input_table tfoot input[type=button] {
+  background-color: greenyellow;
+  margin: 10px 0 10px 0;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 10px 15px;
+  height: auto;
+  width: auto;
+}
+
+/*
+ * We have to enable overflows, otherwise the sticky header/footer will not work.
+ * Luckily, on the WorkTime page there is no need for overflow: auto/scroll.
+ */
+div#wrapper {
+  overflow: visible;
+}
+
+div#content {
+  overflow: visible;
 }

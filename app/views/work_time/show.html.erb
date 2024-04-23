@@ -33,29 +33,73 @@
 <br/>
 
 <%= form_tag @link_params do %>
-    <h2>
-      <%=l(:wt_daily_report)%>
-      <%=@this_date.strftime("%Y-%m-%d")%>
-    </h2>
-
     <%= hidden_field_tag('year', @this_date.year) %>
     <%= hidden_field_tag('month', @this_date.month) %>
     <%= hidden_field_tag('day', @this_date.day) %>
     <%= hidden_field_tag('user', @this_uid) %>
     <%= hidden_field_tag('prj', @restrict_project) %>
 
-    <%=l(:wt_filter)%>
-    <%= radio_button_tag 'filter_issues', 'all', true %>
-    <label for="filter_issues_all"><%=l(:wt_filter_all)%></label>
-    <%= radio_button_tag 'filter_issues', 'month' %>
-    <label for="filter_issues_month"><%=l(:wt_filter_month)%></label>
-    <%= radio_button_tag 'filter_issues', 'day' %>
-    <label for="filter_issues_day"><%=l(:wt_filter_day)%></label>
+    <table border="0" id="time_input_table">
+      <thead>
+        <tr>
+          <td colspan="6">
+            <h2>
+              <%=l(:wt_daily_report)%>
+              <%=@this_date.strftime("%Y-%m-%d")%>
+            </h2>
 
-    <%= render :partial=>'user_day_table' %>
+            <%=l(:wt_filter)%>
+            <%= radio_button_tag 'filter_issues', 'all', true %>
+            <label for="filter_issues_all"><%=l(:wt_filter_all)%></label>
+            <%= radio_button_tag 'filter_issues', 'month' %>
+            <label for="filter_issues_month"><%=l(:wt_filter_month)%></label>
+            <%= radio_button_tag 'filter_issues', 'day' %>
+            <label for="filter_issues_day"><%=l(:wt_filter_day)%></label>
+          </td>
+        </tr>
+        <tr style="font-size:14px">
+          <th><%=l(:wt_project_issue)%></th>
+          <th><%=l(:wt_hours)%></th>
+          <% if @is_registerd_backlog then %>
+          <th><%=l(:field_remaining_hours)%></th>
+          <% end %>
+          <th><%=l(:field_activity)%></th>
+          <th><%=l(:wt_field_job)%></th>
+          <th><%=l(:field_comments)%></th>
+          <% @custom_fields.each do |cf| %>
+            <th><%= cf.name %></th>
+          <% end %>
+          <th></th>
+        </tr>
+      </thead>
 
-<%if @this_uid==@crnt_uid || User.current.allowed_to?(:edit_work_time_other_member, @project) %>
-    <input type="button" onclick="$(window).off('beforeunload'); window.onbeforeunload = null; submit();" value="<%= l(:wt_update) %>" />
-<%end%>
+      <tbody>
+        <%= render :partial=>'user_day_table' %>
+      </tbody>
+
+      <tfoot>
+        <tr id="time_input_table_bottom">
+          <td><%=l(:wt_total)%></td>
+          <td><span id='currentTotal' title='<%=l(:wt_saved_value)%> <%=sprintf("%1.2f", @day_pack[:total])%>'><%=sprintf("%1.2f", @day_pack[:total])%></span></td>
+          <% if @is_registerd_backlog then %>
+          <td>&nbsp;</td>
+          <% end %>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <% @custom_fields.each do |cf| %>
+            <td>&nbsp;</td>
+          <% end %>
+          <td>&nbsp;</td>
+        </tr>
+        <tr>
+          <%if @this_uid==@crnt_uid || User.current.allowed_to?(:edit_work_time_other_member, @project) %>
+          <td colspan="6">
+              <input type="button" onclick="$(window).off('beforeunload'); window.onbeforeunload = null; submit();" value="<%= l(:wt_update) %>" />
+          </td>
+          <%end%>
+        </tr>
+      </tfoot>
+    </table>
 
 <%end%>
