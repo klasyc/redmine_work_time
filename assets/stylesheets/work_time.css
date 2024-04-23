@@ -21,6 +21,24 @@ div.wt_add_ticket_block {
   border: 1px solid black;
 }
 
+#time_input_table tr.daily_report_project td {
+  border-bottom: 1px solid #eee;
+  font-weight: bold;
+  padding-top: 3px;
+}
+
+#time_input_table td a.wt_iss_link {
+  margin-left: 10px;
+}
+
+#time_input_table thead h2 {
+  margin-bottom: 4px;
+}
+
+#time_input_table thead input {
+  margin-top: 0px;
+}
+
 #time_input_table thead,
 #time_input_table tfoot {
   position: sticky;
@@ -32,6 +50,7 @@ div.wt_add_ticket_block {
 #time_input_table thead th {
   border-bottom: 1px solid #ddd;
   padding-bottom: 5px;
+  padding-top: 5px;
 }
 #time_input_table tfoot {
   bottom: 0;
@@ -55,6 +74,10 @@ div.wt_add_ticket_block {
 }
 #time_input_table {
   border-spacing: 0;
+}
+#time_input_table tbody td {
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
 }
 #time_input_table tfoot input[type=button] {
   background-color: greenyellow;
