@@ -4,6 +4,7 @@
 <script type="text/javascript">
   $(document).ready(function() {
     install_filter_handlers();
+    install_mandatory_select_handlers();
   });
 </script>
 
@@ -95,7 +96,7 @@
         <tr>
           <%if @this_uid==@crnt_uid || User.current.allowed_to?(:edit_work_time_other_member, @project) %>
           <td colspan="6">
-              <input type="button" onclick="$(window).off('beforeunload'); window.onbeforeunload = null; submit();" value="<%= l(:wt_update) %>" />
+              <input type="button" id="save_button" onclick="$(window).off('beforeunload'); window.onbeforeunload = null; submit();" value="<%= l(:wt_update) %>" />
           </td>
           <%end%>
         </tr>

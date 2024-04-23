@@ -79,6 +79,64 @@ function install_filter_handlers()
   });
 }
 
+// If the row containing the hours input has a select element with class mandatory_select, then
+// check if the select element has a value. If not, display the select element red and disable the Save button.
+function check_row(row_element, enable_if_ok = true)
+{
+  var row = $(row_element).parents("tr");
+  var row_ok = true;
+
+  // Check if there is a value in the hours input field. If not, we can skip the rest.
+  var hours = row.find("input.hours");
+  if (hours.length == 0) {
+    return;
+  }
+  var hours_value = hours.val().replace(",", ".");
+
+  // If the value is not empty, try to parse it as a number.
+  if (isNaN(Number(hours_value))) {
+    row_ok = false;
+    hours.css("background-color", "#FFCCCC");
+  } else {
+    hours.css("background-color", "");
+  }
+
+  // Check mandatory select elements, if they are present:
+  var select = row.find("select.mandatory_select");
+  if (select.length > 0) {
+    var select_value = select.find(":selected");
+    if (select_value.val() == "" && hours_value != "") {
+      row_ok = false;
+      select.css("background-color", "#FFCCCC");
+    } else {
+      select.css("background-color", "");
+    }
+  }
+
+  // Enable or disable the Save button, depending on the row status.
+  if (enable_if_ok && row_ok) {
+    $("#save_button").prop("disabled", false);
+    // Now check all the rows, because some other row can be still invalid:
+    $("#time_input_table tr input.hours").each(function() {
+      check_row(this, false);
+    });
+  } else if (!row_ok) {
+    $("#save_button").prop("disabled", true);
+  }
+}
+
+// Installs change handlers on the input and select elements of the time input table.
+// They allow to check if the select elements with class mandatory_select have a value.
+function install_mandatory_select_handlers()
+{
+  $("#time_input_table tr input").on("input", function() {
+    check_row(this);
+  });
+  $("#time_input_table tr select").on("change", function() {
+    check_row(this);
+  });
+}
+
 //------------- for user_day_table.html.erb
 function sumDayTimes() {
   var total=0;

@@ -9,6 +9,7 @@ cs:
   wt_filter_month: "Vyplněné v tomto měsíci"
   wt_filter_day: "Pouze vyplněné"
   wt_total: "Celkový čas"
+  wt_select_job: "Vyberte job..."
   wt_update: "Uložit změny"
   wt_month_names: "Led,Úno,Bře,Dub,Kvě,Čer,Čnc,Srp,Zář,Říj,Lis,Pro"
   wt_week_day_names: "Ne,Po,Út,St,Čt,Pá,So"

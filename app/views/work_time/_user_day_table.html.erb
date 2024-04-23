@@ -44,6 +44,9 @@ prj_pack[:odr_issues].each do |issue_pack|
   # Select the first job by default:
   job_default = jobs[0]
 
+  # Create a copy of the job list and add an empty placeholder at the beginning:
+  jobs_with_disabled = jobs.map(&:clone).unshift([l(:wt_select_job), ""])
+
   if issue_pack[:each_entries].length==0 then
 %>
 <!-- No work entries -->
@@ -72,11 +75,11 @@ prj_pack[:odr_issues].each do |issue_pack|
   </td>
   <td>
     <% if !jobs.empty? then %>
-      <%= select_tag "new_time_entry["+issue_id.to_s+"][0][job]", options_for_select(jobs,job_default) %>
+      <%= select_tag "new_time_entry["+issue_id.to_s+"][0][job]", options_for_select(jobs_with_disabled, selected: "", disabled: ""), { :class => "mandatory_select" } %>
     <% end %>
   </td>
   <td>
-    <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][comments]", "", :size=>80)%>
+    <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][comments]", "", :size=>80, :class => "comments")%>
   </td>
   <%if @custom_fields.length != 0
       dummy_hour = TimeEntry.new(:project => issue.project, :issue => issue, :user => @this_user, :spent_on => @this_date)

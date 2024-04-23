@@ -9,6 +9,7 @@ en:
   wt_filter_month: "Filled this month"
   wt_filter_day: "Filled only"
   wt_total: "Total time"
+  wt_select_job: "Select job..."
   wt_update: "Save"
   wt_month_names: "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
   wt_week_day_names: "Sun,Mon,Tue,Wed,Thu,Fri,Sat"
