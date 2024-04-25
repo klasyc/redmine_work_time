@@ -360,8 +360,10 @@ private
     # Aggregate work time for the month
     hours = TimeEntry.
         includes(:issue).
+        includes(:project).
         where(["user_id=:uid and spent_on>=:day1 and spent_on<=:day2",
                {:uid => @this_uid, :day1 => @first_date, :day2 => @last_date}]).
+        order("projects.name, issues.subject").
         all
     hours.each do |hour|
       next if @restrict_project && @restrict_project!=hour.project.id
