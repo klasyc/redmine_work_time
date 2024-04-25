@@ -85,7 +85,7 @@ class WorkTimeController < ApplicationController
           end
 
           @add_issue = add_issue
-          @jobs = get_jobs_from_project_description(prj)
+          @jobs = get_jobs_from_project(prj)
 
         end
       end
@@ -167,12 +167,24 @@ private
     @members = create_member_list(@project)
   end
 
-  # Gets the jobs from the project description.
-  def get_jobs_from_project_description(project)
+  # Gets the jobs from the project's custom field which can be defined in the plugin settings:
+  def get_jobs_from_project(project)
     jobs = []
+    job_list_field_id = Setting.plugin_redmine_work_time['job_list_field_id']
 
-    # Available jobs are stored in the project description. Each job is on its own line and the line has to start with '- '.
-    project.description.each_line do |line|
+    # If we don't have the custom field id or the id is not numeric, return an empty list of jobs:
+    if job_list_field_id.nil? || job_list_field_id !~ /\A\d+\z/
+      return jobs
+    end
+
+    # Get project's custom field value with the ID specified in the plugin settings:
+    job_list = CustomValue.where(customized_type: 'Project', customized_id: project.id, custom_field_id: job_list_field_id).first.value rescue nil
+    if job_list.nil?
+      return jobs
+    end
+
+    # Each job is on its own line and the line has to start with '- '.
+    job_list.each_line do |line|
       if line.start_with?('- ')
         # The line consists of the job name and its description, both separated by a comma.
         # The job name is used as the value and the job description is used as the label.
@@ -477,7 +489,7 @@ private
         pack[:odr_prjs].push prj_pack
         pack[:count_prjs] += 1
         prj_pack[:total_by_day].default = 0
-        prj_pack[:jobs] = get_jobs_from_project_description(new_prj)
+        prj_pack[:jobs] = get_jobs_from_project(new_prj)
       end
       pack[:ref_prjs][new_prj.id]
   end
