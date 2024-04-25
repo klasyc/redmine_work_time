@@ -483,6 +483,20 @@ private
         @month_pack[:count_issues] += prj_pack[:count_issues]
       end
     end
+
+    # Sort the month_pack[:ref_prjs] by the project name:
+    @day_pack[:odr_prjs] = []
+    @day_pack[:ref_prjs].values.sort_by { |prj_pack| prj_pack[:prj].name }.each do |prj_pack|
+      @day_pack[:odr_prjs].push prj_pack
+    end
+
+    # Sort issues inside the @day_pack by the issue subject in each project:
+    @day_pack[:odr_prjs].each do |prj_pack|
+      prj_pack[:odr_issues] = []
+      prj_pack[:ref_issues].values.sort_by { |issue_pack| issue_pack[:issue].subject }.each do |issue_pack|
+        prj_pack[:odr_issues].push issue_pack
+      end
+    end
   end
 
   def make_pack_prj(pack, new_prj, odr=NO_ORDER)
