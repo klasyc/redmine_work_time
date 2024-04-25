@@ -41,11 +41,8 @@ prj_pack[:odr_issues].each do |issue_pack|
   issue = Issue.find_by_id(issue_id)
   issue_html = wk_pretty_issue_name issue, issue_id
 
-  # Select the first job by default:
-  job_default = jobs[0]
-
   # Create a copy of the job list and add an empty placeholder at the beginning:
-  jobs_with_disabled = jobs.map(&:clone).unshift([l(:wt_select_job), ""])
+  jobs_with_disabled = jobs.map(&:clone).unshift([l(:wt_select_job), "none"])
 
   if issue_pack[:each_entries].length==0 then
 %>
@@ -75,7 +72,7 @@ prj_pack[:odr_issues].each do |issue_pack|
   </td>
   <td>
     <% if !jobs.empty? then %>
-      <%= select_tag "new_time_entry["+issue_id.to_s+"][0][job]", options_for_select(jobs_with_disabled, selected: "", disabled: ""), { :class => "mandatory_select" } %>
+      <%= select_tag "new_time_entry["+issue_id.to_s+"][0][job]", options_for_select(jobs_with_disabled, selected: "none", disabled: "none"), { :class => "mandatory_select" } %>
     <% end %>
   </td>
   <td>
@@ -109,9 +106,12 @@ prj_pack[:odr_issues].each do |issue_pack|
 <!-- Work entry exists -->
 <%
       # If the hours comment starts with one of the available jobs, set the job_default to that job
-      # and remove the job from the comment:
+      # and remove the job from the comment. Otherwise, set the job_default to the last job in the list
+      # which is the special "other" job.
+      job_default = jobs[-1]
       jobs.each do |job|
-        if hour.comments.start_with?(job[1])
+        # if the job name is not empty and the comment starts with the job name:
+        if !job[1].empty? && hour.comments.start_with?(job[1])
           job_default = job
           hour.comments = hour.comments[job[1].length + 2..-1].strip
           break

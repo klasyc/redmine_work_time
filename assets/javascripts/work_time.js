@@ -105,7 +105,7 @@ function check_row(row_element, enable_if_ok = true)
   var select = row.find("select.mandatory_select");
   if (select.length > 0) {
     var select_value = select.find(":selected");
-    if (select_value.val() == "" && hours_value != "") {
+    if (select_value.val() == "none" && hours_value != "") {
       row_ok = false;
       select.css("background-color", "#FFCCCC");
     } else {
