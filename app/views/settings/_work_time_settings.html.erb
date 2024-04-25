@@ -11,6 +11,11 @@
   <%= text_field_tag 'settings[job_list_field_id]', @settings['job_list_field_id'] %>
 </p>
 
+<p>
+  <%= label_tag :settings_default_activity_field_id, 'Default activity custom field ID' %>
+  <%= text_field_tag 'settings[default_activity_field_id]', @settings['default_activity_field_id'] %>
+</p>
+
 <% (@settings['account_start_days'] || {}).each do |k,v| %>
     <%= hidden_field_tag "settings[account_start_days][#{k}]", v %>
 <% end %>

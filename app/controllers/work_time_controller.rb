@@ -165,6 +165,14 @@ private
     end
 
     @members = create_member_list(@project)
+
+    # Pass default activity user present to the view. This preset is stored in the custom field of the user
+    # whose ID is stored in the default_activity field of the plugin settings.
+    @default_activity_preset = nil
+    default_activity_id = Setting.plugin_redmine_work_time['default_activity_field_id']
+    if default_activity_id =~ /\A\d+\z/
+      @default_activity_preset = CustomValue.where(customized_type: 'Principal', custom_field_id: default_activity_id, customized_id: @this_uid).first.value rescue nil
+    end
   end
 
   # Gets the jobs from the project's custom field which can be defined in the plugin settings:

@@ -10,7 +10,10 @@
   activity_default = nil
   prj.activities.each do |act|
     activities.push([act.name, act.id])
-    activity_default = act.id if act.is_default
+    # Default activity: if the user has a default activity preset, use it as default.
+    # If not, use the default activity defined in the Redmine configuration:
+    activity_default = act.id if !@default_activity_preset.nil? && act.name == @default_activity_preset
+    activity_default = act.id if act.is_default && @default_activity_preset.nil?
   end
 
   jobs = prj_pack[:jobs] || []
