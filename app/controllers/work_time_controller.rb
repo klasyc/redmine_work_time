@@ -205,7 +205,10 @@ private
     end
 
     # Add extra "other" job to the list. This entry allows not to enter any comment prefix.
-    jobs.push([l(:wt_other_job), ""])
+    # Do not add this option if the list is empty.
+    if jobs.length > 0 then
+      jobs.push([l(:wt_other_job), ""])
+    end
 
     jobs # Return the list of job pairs [description, name]
   end
