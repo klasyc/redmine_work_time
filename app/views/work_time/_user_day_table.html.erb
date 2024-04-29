@@ -116,7 +116,12 @@ prj_pack[:odr_issues].each do |issue_pack|
         # if the job name is not empty and the comment starts with the job name:
         if !job[1].empty? && hour.comments.start_with?(job[1])
           job_default = job
-          hour.comments = hour.comments[job[1].length + 2..-1].strip
+          # If the job is followed by ", ", remove the job name and the comma and space from the comment.
+          if hour.comments.starts_with?(job[1] + ", ")
+            hour.comments = hour.comments[job[1].length + 2..-1].strip
+          else # Otherwise, just remove the job name from the comment.
+            hour.comments = hour.comments[job[1].length..-1].strip
+          end
           break
         end
       end
