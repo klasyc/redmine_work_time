@@ -213,6 +213,14 @@ private
     jobs # Return the list of job pairs [description, name]
   end
 
+  # Returns true if specified project has status update enabled in WorkTime. This value is taken from the project's parent_id
+  # which has to be equal to the project id specified in the status_project_id field of the plugin settings.
+  def is_project_status_update_enabled?(project)
+    status_project_id = Setting.plugin_redmine_work_time['status_project_id']
+    return false if status_project_id.nil? || status_project_id !~ /\A\d+\z/
+    return project.parent_id.to_i == status_project_id.to_i
+  end
+
   def hour_update # Time entry update request processing
     by_other = false
     update_done = false
@@ -298,6 +306,7 @@ private
         end
         if vals["remaining_hours"].present? || vals["status_id"].present? then
           append_error_message_html(@message, issue_update_to_remain_and_more(issue_id, vals))
+          update_done = true
         end
       end
     end
@@ -521,6 +530,7 @@ private
         pack[:count_prjs] += 1
         prj_pack[:total_by_day].default = 0
         prj_pack[:jobs] = get_jobs_from_project(new_prj)
+        prj_pack[:status_update_enabled] = is_project_status_update_enabled?(new_prj)
       end
       pack[:ref_prjs][new_prj.id]
   end

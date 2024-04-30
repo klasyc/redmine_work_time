@@ -16,6 +16,11 @@
   <%= text_field_tag 'settings[default_activity_field_id]', @settings['default_activity_field_id'] %>
 </p>
 
+<p>
+  <%= label_tag :settings_status_project_id, 'ID of the project whose child projects have status change enabled' %>
+  <%= text_field_tag 'settings[status_project_id]', @settings['status_project_id'] %>
+</p>
+
 <% (@settings['account_start_days'] || {}).each do |k,v| %>
     <%= hidden_field_tag "settings[account_start_days][#{k}]", v %>
 <% end %>

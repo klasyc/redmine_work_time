@@ -13,6 +13,14 @@ function dup_ticket(ajax_url, insert_pos, id)
   add_ticket_count ++;
 }
 
+function statusUpdateOnDailyTable(name) {
+  obj = document.getElementsByName(name)[0];
+  obj.style.backgroundColor = '#cfc';
+  index = obj.selectedIndex;
+  v = obj.options[index].value;
+  obj.options[index].value = 'M'+v;
+}
+
 // Hides projects that have no issues visible.
 function set_project_visibility()
 {

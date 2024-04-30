@@ -2,7 +2,7 @@ en:
   work_time: "WorkTime"
   wt_hours: "Work Time"
   wt_project_issue: "Project / issue"
-  wt_field_job: "Job"
+  wt_field_job: "Job / status"
   wt_duplicate_issue: "Report more work on this issue"
   wt_filter: "Display issues:"
   wt_filter_all: "All"
