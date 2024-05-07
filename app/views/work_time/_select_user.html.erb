@@ -4,7 +4,11 @@
   <option value="">---</option>
 <%
 members_name_id = Array.new
-@members.each {|mem| members_name_id << [mem[1].to_s, mem[1].id]}
+@members.each do |mem|
+  if mem[1].active?
+    members_name_id << [mem[1].to_s, mem[1].id]
+  end
+end
 members_name_id.sort!
 members_name_id.each do |member_name_id|
   sel = (member_name_id[1] == @this_uid) ? 'selected' : ''
