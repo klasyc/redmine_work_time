@@ -9,7 +9,7 @@ members_name_id = Array.new
     members_name_id << [mem[1].to_s, mem[1].id]
   end
 end
-members_name_id.sort!
+members_name_id.sort_by! { |member_name_id| member_name_id[0].unicode_normalize(:nfd) }
 members_name_id.each do |member_name_id|
   sel = (member_name_id[1] == @this_uid) ? 'selected' : ''
 %>
