@@ -8,6 +8,11 @@ function dup_ticket(ajax_url, insert_pos, id)
     data:{asynchronous:true, method:'get'},
     success:function(response){
       jQuery('#'+insert_pos).after(response);
+      // Let the newly added row pulse to indicate that it was added.
+      var row = jQuery("#"+insert_pos).next();
+      row.animate({backgroundColor: "#CCCCFF"}, 500);
+      row.animate({backgroundColor: "#FAFAFA"}, 1000);
+      // Install the mandatory select handlers again, because the new row has them.
       setTimeout(function() {
         install_mandatory_select_handlers();
       }, 100);
