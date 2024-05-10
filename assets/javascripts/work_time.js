@@ -8,6 +8,9 @@ function dup_ticket(ajax_url, insert_pos, id)
     data:{asynchronous:true, method:'get'},
     success:function(response){
       jQuery('#'+insert_pos).after(response);
+      setTimeout(function() {
+        install_mandatory_select_handlers();
+      }, 100);
     }
   });
   add_ticket_count ++;

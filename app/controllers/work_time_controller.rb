@@ -86,7 +86,7 @@ class WorkTimeController < ApplicationController
 
           @add_issue = add_issue
           @jobs = get_jobs_from_project(prj)
-
+          @status_update_enabled = is_project_status_update_enabled?(prj)
         end
       end
     end
