@@ -25,7 +25,7 @@
     <% if !@jobs.empty? then %>
       <%=
         jobs_with_disabled = @jobs.map(&:clone).unshift([l(:wt_select_job), "none"])
-        select_tag "new_time_entry["+@add_issue_id.to_s+"][0][job]", options_for_select(jobs_with_disabled, selected: "none", disabled: "none"), { :class => "mandatory_select" }
+        select_tag "new_time_entry["+@add_issue_id.to_s+"]["+@add_count+"][job]", options_for_select(jobs_with_disabled, selected: "none", disabled: "none"), { :class => "mandatory_select" }
       %>
     <% end %>
 
@@ -34,7 +34,7 @@
       <% if @add_issue.new_statuses_allowed_to(User.current).length == 0 then %>
       <%= @add_issue.status %>
       <% else %>
-      <% select_name="new_time_entry["+@add_issue_id.to_s+"][0][status_id]" %>
+      <% select_name="new_time_entry["+@add_issue_id.to_s+"]["+@add_count+"][status_id]" %>
       <%= select_tag select_name,
                     options_for_select(@add_issue.new_statuses_allowed_to(User.current).collect {|p| [p.name, p.id]},
                                         @add_issue.status_id),
